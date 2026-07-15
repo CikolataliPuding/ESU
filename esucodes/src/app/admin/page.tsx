@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
-  LayoutDashboard, FileText, Users, FolderOpen, LogOut,
-  Plus, Pencil, Trash2, Eye, EyeOff, CheckCircle, Clock,
+  LayoutDashboard, FileText, FolderOpen, LogOut,
+  Plus, Pencil, Trash2, Eye, EyeOff, CheckCircle,
   ChevronRight, X, Save, Send, UsersRound, Globe, Bot,
-  LayoutDashboard as LDash, Orbit, Shield, MessageSquare,
+  LayoutDashboard as LDash, Orbit, Shield, MessageSquare, ExternalLink, Inbox, XCircle,
+  Rocket, Terminal,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { RichEditor } from "@/components/editor/RichEditor";
-import { CATEGORIES } from "@/lib/data";
+import { CATEGORIES, NAV, JOIN_ROLES } from "@/lib/data";
 import type { Role } from "@/lib/supabase/types";
 
 type Profile    = { id: string; role: Role; full_name: string | null; username: string | null };
@@ -21,6 +23,7 @@ const NAV_ITEMS = [
   { id: "overview",  label: "Genel Bakış",  icon: LayoutDashboard, adminOnly: false },
   { id: "posts",     label: "Yazılar",      icon: FileText,         adminOnly: false },
   { id: "comments",  label: "Yorumlar",     icon: MessageSquare,    adminOnly: true  },
+  { id: "applications", label: "Başvurular", icon: Inbox,           adminOnly: true  },
   { id: "team",      label: "Ekip",         icon: UsersRound,       adminOnly: true  },
   { id: "projects",  label: "Projeler",     icon: FolderOpen,       adminOnly: true  },
   { id: "users",     label: "Kullanıcılar", icon: Shield,           adminOnly: true  },
@@ -237,25 +240,85 @@ function ProjectEditor({ project, onClose, onSave }: { project?: Project; onClos
 }
 
 // ── Overview Tab ───────────────────────────────────────────────────
-function OverviewTab({ stats }: { stats: { published: number; draft: number; users: number; comments: number } }) {
-  const cards = [
-    { label: "Yayınlanan", value: stats.published, color: "#22d3ee", icon: CheckCircle },
-    { label: "Taslak",     value: stats.draft,     color: "#818cf8", icon: Clock },
-    { label: "Üye",        value: stats.users,     color: "#a78bfa", icon: Users },
-    { label: "Yorum",      value: stats.comments,  color: "#fb923c", icon: FileText },
+function OverviewTab({
+  stats, pendingComments, pendingApplications,
+}: {
+  stats: { published: number; draft: number; users: number; comments: number };
+  pendingComments: number;
+  pendingApplications: number;
+}) {
+  const todayLabel = new Date().toLocaleDateString("tr-TR", { weekday: "long", day: "numeric", month: "long" });
+
+  const secondary = [
+    { label: "Taslak", value: stats.draft,    color: "#a78bfa", icon: Orbit },
+    { label: "Üye",    value: stats.users,    color: "#22d3ee", icon: UsersRound },
+    { label: "Yorum",  value: stats.comments, color: "#fb923c", icon: MessageSquare },
   ];
+
+  const attention = [
+    { label: "onay bekleyen yorum", value: pendingComments,     color: "#fb923c", icon: MessageSquare },
+    { label: "yeni başvuru",        value: pendingApplications, color: "#22d3ee", icon: Inbox },
+  ].filter((a) => a.value > 0);
+
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 24px" }}>Genel Bakış</h2>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16 }}>
-        {cards.map((c) => (
-          <div key={c.label} style={{ padding: "24px 20px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
-            <c.icon size={22} color={c.color} />
-            <div style={{ fontSize: 32, fontWeight: 800, color: "var(--text-primary)", margin: "12px 0 4px", lineHeight: 1 }}>{c.value}</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{c.label}</div>
-          </div>
-        ))}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 9999, background: "var(--accent-tertiary)", boxShadow: "0 0 8px var(--accent-tertiary)", animation: "esu-pulse 2s ease-in-out infinite", display: "inline-block" }} />
+        <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)", textTransform: "capitalize" }}>{todayLabel}</span>
       </div>
+      <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", margin: "0 0 28px", letterSpacing: "-0.01em" }}>Genel Bakış</h2>
+
+      <div className="grid-2" style={{ gap: 20, alignItems: "stretch" }}>
+        {/* Hero metric — en önemli sayı büyük ve gradient */}
+        <div style={{
+          position: "relative", overflow: "hidden", padding: "26px 28px 24px", borderRadius: 22,
+          background: "linear-gradient(160deg, rgba(129,140,248,0.14), rgba(34,211,238,0.05) 65%, transparent)",
+          border: "1px solid rgba(129,140,248,0.25)",
+        }}>
+          <div style={{ position: "absolute", top: -50, right: -50, width: 180, height: 180, borderRadius: 9999, background: "radial-gradient(circle, rgba(129,140,248,0.22), transparent 70%)", pointerEvents: "none" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, position: "relative" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, flexShrink: 0, background: "rgba(129,140,248,0.18)", border: "1px solid rgba(129,140,248,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Rocket size={18} color="var(--accent-primary)" />
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>Yayınlanan Yazı</span>
+          </div>
+          <div className="esu-gradient-text" style={{ fontSize: 64, fontWeight: 900, lineHeight: 1, letterSpacing: "-0.03em", position: "relative" }}>
+            {stats.published}
+          </div>
+          <p style={{ fontSize: 13, color: "var(--text-muted)", margin: "10px 0 0", maxWidth: 280, position: "relative" }}>
+            Galaksi büyüyor — yayına alınan toplam yazı sayısı.
+          </p>
+        </div>
+
+        {/* Secondary stats — ikincil, kompakt satırlar */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {secondary.map((s) => (
+            <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", flex: 1 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, flexShrink: 0, background: `${s.color}18`, border: `1px solid ${s.color}35`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <s.icon size={17} color={s.color} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: "var(--text-primary)", lineHeight: 1 }}>{s.value}</div>
+                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {attention.length > 0 && (
+        <div style={{ marginTop: 20, padding: "16px 20px", borderRadius: 16, background: "rgba(251,146,60,0.06)", border: "1px solid rgba(251,146,60,0.25)" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#fb923c", letterSpacing: "0.04em", marginBottom: 12, fontFamily: "var(--font-mono)" }}>{"// dikkat gerekiyor"}</div>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            {attention.map((a) => (
+              <div key={a.label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <a.icon size={16} color={a.color} />
+                <span style={{ fontSize: 14, color: "var(--text-secondary)" }}><strong style={{ color: "var(--text-primary)" }}>{a.value}</strong> {a.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -607,6 +670,108 @@ function CommentsTab({ onPendingChange }: { onPendingChange: (n: number) => void
   );
 }
 
+// ── Applications Tab ───────────────────────────────────────────────
+type Application = { id: string; name: string; email: string; github: string | null; roles: string[]; level: string; message: string; status: "yeni" | "kabul" | "red"; created_at: string };
+type AppFilter = "aktif" | "yeni" | "kabul" | "red";
+
+const APPLICATION_STATUS_LABELS: Record<Application["status"], string> = { yeni: "Yeni", kabul: "Kabul", red: "Red" };
+const APPLICATION_STATUS_COLORS: Record<Application["status"], string> = { yeni: "#fb923c", kabul: "#22d3ee", red: "#f87171" };
+
+function ApplicationsTab({ onPendingChange }: { onPendingChange: (n: number) => void }) {
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [filter, setFilter]     = useState<AppFilter>("aktif");
+
+  const fetchApplications = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch("/api/admin/applications");
+    const data = res.ok ? await res.json() : [];
+    const list = Array.isArray(data) ? (data as Application[]) : [];
+    setApplications(list);
+    onPendingChange(list.filter((a) => a.status === "yeni").length);
+    setLoading(false);
+  }, [onPendingChange]);
+
+  useEffect(() => { fetchApplications(); }, [fetchApplications]);
+
+  const handleStatus = async (id: string, status: Application["status"]) => {
+    await fetch(`/api/admin/applications/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status }) });
+    fetchApplications();
+  };
+
+  // "Aktif" = arşivlenmemiş (red dışındaki) başvurular; reddedilenler silinmiyor,
+  // sadece varsayılan listenin dışına çıkıp "Arşiv" filtresinde kalıyor.
+  const shown = applications.filter((a) =>
+    filter === "aktif" ? a.status !== "red" : a.status === filter
+  );
+
+  const FILTERS: { key: AppFilter; label: string; count: number }[] = [
+    { key: "aktif", label: "Aktif",  count: applications.filter((a) => a.status !== "red").length },
+    { key: "yeni",  label: "Yeni",   count: applications.filter((a) => a.status === "yeni").length },
+    { key: "kabul", label: "Kabul",  count: applications.filter((a) => a.status === "kabul").length },
+    { key: "red",   label: "Arşiv (Red)", count: applications.filter((a) => a.status === "red").length },
+  ];
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Başvurular</h2>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {FILTERS.map((f) => (
+            <button key={f.key} onClick={() => setFilter(f.key)} style={{ padding: "7px 14px", borderRadius: 9999, fontSize: 13, fontWeight: 600, cursor: "pointer", border: "1px solid var(--border-subtle)", background: filter === f.key ? "var(--accent-primary)" : "var(--glass-fill)", color: filter === f.key ? "var(--bg-primary)" : "var(--text-secondary)" }}>
+              {f.label} ({f.count})
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>Yükleniyor...</div>
+      ) : shown.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>Başvuru yok.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {shown.map((a) => (
+            <div key={a.id} style={{ padding: "16px 18px", borderRadius: 14, background: "var(--glass-fill)", border: `1px solid ${a.status === "yeni" ? "rgba(251,146,60,0.3)" : "var(--border-subtle)"}` }}>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9999, background: "rgba(129,140,248,0.2)", border: "1px solid rgba(129,140,248,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "var(--accent-primary)", flexShrink: 0 }}>
+                    {a.name[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)" }}>{a.name}</div>
+                    <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{a.email} · {new Date(a.created_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })}</div>
+                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 9999, background: `${APPLICATION_STATUS_COLORS[a.status]}20`, color: APPLICATION_STATUS_COLORS[a.status] }}>
+                    {APPLICATION_STATUS_LABELS[a.status]}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0, flexWrap: "wrap" }}>
+                  {a.status !== "kabul" && (
+                    <button onClick={() => handleStatus(a.id, "kabul")} title="Kabul Et" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(34,211,238,0.3)", background: "rgba(34,211,238,0.08)", cursor: "pointer", color: "#22d3ee", fontSize: 13, fontWeight: 600 }}>
+                      <CheckCircle size={14} /> Kabul
+                    </button>
+                  )}
+                  {a.status !== "red" && (
+                    <button onClick={() => handleStatus(a.id, "red")} title="Reddet" style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", cursor: "pointer", color: "#f87171", fontSize: 13, fontWeight: 600 }}>
+                      <XCircle size={14} /> Red
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div style={{ marginLeft: 44, fontSize: 13, color: "var(--text-secondary)", marginBottom: 8 }}>
+                {a.github && <span style={{ fontFamily: "var(--font-mono)" }}>@{a.github} · </span>}
+                {a.level} · {a.roles.map((id) => JOIN_ROLES.find((r) => r.id === id)?.label ?? id).join(", ")}
+              </div>
+              <p style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.65, margin: "0 0 0 44px" }}>{a.message}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main ───────────────────────────────────────────────────────────
 export default function AdminPage() {
   const router = useRouter();
@@ -615,6 +780,7 @@ export default function AdminPage() {
   const [stats, setStats]         = useState({ published: 0, draft: 0, users: 0, comments: 0 });
   const [loading, setLoading]     = useState(true);
   const [pendingComments, setPendingComments] = useState(0);
+  const [pendingApplications, setPendingApplications] = useState(0);
 
   useEffect(() => {
     const init = async () => {
@@ -657,37 +823,81 @@ export default function AdminPage() {
   const visibleNav = NAV_ITEMS.filter((n) => !n.adminOnly || profile?.role === "admin");
 
   return (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 80px)" }}>
-      <aside style={{ width: 220, borderRight: "1px solid var(--border-subtle)", padding: "20px 12px", display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
-        <div style={{ padding: "12px 14px", marginBottom: 12, borderRadius: 12, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.full_name ?? "Kullanıcı"}</div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: ROLE_COLORS[profile!.role], marginTop: 2, textTransform: "uppercase", letterSpacing: "0.06em" }}>{profile?.role}</div>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      <aside className="admin-sidebar" style={{ borderRight: "1px solid var(--border-subtle)", background: "linear-gradient(180deg, rgba(129,140,248,0.04), transparent 24%)", padding: "18px 12px", display: "flex", flexDirection: "column", gap: 4, flexShrink: 0 }}>
+        {/* Brand */}
+        <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "0 6px", marginBottom: 18 }}>
+          <Terminal size={16} color="var(--accent-tertiary)" style={{ flexShrink: 0 }} />
+          <span className="admin-label" style={{ display: "flex", alignItems: "baseline", gap: 5, overflow: "hidden" }}>
+            <span className="esu-gradient-text" style={{ fontSize: 16, fontWeight: 800, whiteSpace: "nowrap" }}>ESUCODES</span>
+            <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)", whiteSpace: "nowrap" }}>/admin</span>
+          </span>
+        </div>
+
+        {/* Profile */}
+        <div className="admin-profile" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px", marginBottom: 14, borderRadius: 12, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9999, flexShrink: 0, background: "var(--accent-gradient)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "var(--bg-primary)" }}>
+            {(profile?.full_name ?? "?")[0].toUpperCase()}
+          </div>
+          <div className="admin-label" style={{ minWidth: 0, overflow: "hidden" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.full_name ?? "Kullanıcı"}</div>
+            <span style={{ display: "inline-block", marginTop: 3, fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 9999, textTransform: "uppercase", letterSpacing: "0.05em", background: `${ROLE_COLORS[profile!.role]}20`, color: ROLE_COLORS[profile!.role] }}>{profile?.role}</span>
+          </div>
         </div>
 
         {visibleNav.map((item) => {
-          const showBadge = item.id === "comments" && pendingComments > 0;
+          const badgeCount = item.id === "comments" ? pendingComments : item.id === "applications" ? pendingApplications : 0;
+          const showBadge = badgeCount > 0;
+          const active = tab === item.id;
           return (
-            <button key={item.id} onClick={() => setTab(item.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, border: "none", cursor: "pointer", background: tab === item.id ? "rgba(129,140,248,0.15)" : "transparent", color: tab === item.id ? "var(--accent-primary)" : "var(--text-secondary)", fontSize: 14, fontWeight: tab === item.id ? 700 : 500, textAlign: "left", width: "100%", transition: "all 0.15s" }}>
-              <item.icon size={17} />
-              {item.label}
+            <button key={item.id} onClick={() => setTab(item.id)} className="admin-nav-btn" style={{
+              display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 10, border: "none", cursor: "pointer",
+              background: active ? "rgba(129,140,248,0.13)" : "transparent",
+              boxShadow: active ? "inset 3px 0 0 0 var(--accent-primary)" : "inset 3px 0 0 0 transparent",
+              color: active ? "var(--accent-primary)" : "var(--text-secondary)",
+              fontSize: 14, fontWeight: active ? 700 : 500, textAlign: "left", width: "100%", transition: "all 0.15s",
+            }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", background: active ? "rgba(129,140,248,0.18)" : "transparent", transition: "all 0.15s" }}>
+                <item.icon size={15} />
+              </div>
+              <span className="admin-label" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
               {showBadge && (
-                <span style={{ marginLeft: 4, minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9999, background: "#fb923c", color: "#0f172a", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{pendingComments}</span>
+                <span className="admin-label" style={{ marginLeft: "auto", minWidth: 18, height: 18, padding: "0 5px", borderRadius: 9999, background: "#fb923c", color: "#0f172a", fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{badgeCount}</span>
               )}
-              {tab === item.id && !showBadge && <ChevronRight size={14} style={{ marginLeft: "auto" }} />}
+              {active && !showBadge && <ChevronRight className="admin-label" size={14} style={{ marginLeft: "auto", flexShrink: 0 }} />}
             </button>
           );
         })}
 
         <div style={{ flex: 1 }} />
-        <button onClick={handleLogout} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", background: "rgba(239,68,68,0.08)", color: "#f87171", fontSize: 14, fontWeight: 600, width: "100%" }}>
-          <LogOut size={17} /> Çıkış Yap
+
+        <div style={{ borderTop: "1px solid var(--border-subtle)", marginTop: 8, paddingTop: 12 }}>
+          <div className="admin-label" style={{ padding: "0 10px 8px", fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+            {"// canlı site"}
+          </div>
+          {NAV.map((link) => (
+            <Link key={link.id} href={link.href} className="admin-nav-btn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 10, color: "var(--text-secondary)", fontSize: 13, fontWeight: 500, textDecoration: "none", transition: "all 0.15s" }}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <ExternalLink size={14} />
+              </div>
+              <span className="admin-label" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{link.label}</span>
+            </Link>
+          ))}
+        </div>
+
+        <button onClick={handleLogout} className="admin-nav-btn" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 10px", borderRadius: 10, border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer", background: "rgba(239,68,68,0.08)", color: "#f87171", fontSize: 14, fontWeight: 600, width: "100%", marginTop: 8 }}>
+          <div style={{ width: 26, height: 26, borderRadius: 8, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <LogOut size={15} />
+          </div>
+          <span className="admin-label">Çıkış Yap</span>
         </button>
       </aside>
 
       <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
-        {tab === "overview"  && <OverviewTab stats={stats} />}
+        {tab === "overview"  && <OverviewTab stats={stats} pendingComments={pendingComments} pendingApplications={pendingApplications} />}
         {tab === "posts"     && <PostsTab role={profile!.role} />}
         {tab === "comments"  && profile?.role === "admin" && <CommentsTab onPendingChange={setPendingComments} />}
+        {tab === "applications" && profile?.role === "admin" && <ApplicationsTab onPendingChange={setPendingApplications} />}
         {tab === "team"      && profile?.role === "admin" && <TeamTab />}
         {tab === "projects"  && profile?.role === "admin" && <ProjectsTab />}
         {tab === "users"     && profile?.role === "admin" && <UsersTab />}

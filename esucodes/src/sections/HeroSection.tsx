@@ -54,7 +54,7 @@ export function HeroSection() {
             display: "inline-block",
           }} />
           <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-tertiary)", letterSpacing: "0.08em" }}>
-            EXPLORE SOFTWARE UNIVERSE
+            KEŞFET · ÖĞREN · ÜRET
           </span>
         </div>
 
@@ -76,12 +76,31 @@ export function HeroSection() {
           }}>|</span>
         </div>
 
+        {/* Slogan */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "clamp(16px, 4vw, 48px)", margin: "20px 0 0" }}>
+          {["Keşfet", "Öğren", "Üret"].map((word, i) => (
+            <span key={word} style={{
+              fontSize: "clamp(15px, 2vw, 22px)", fontWeight: 800, letterSpacing: "0.04em",
+              background: [
+                "linear-gradient(135deg, #818cf8, #a78bfa)",
+                "linear-gradient(135deg, #a78bfa, #22d3ee)",
+                "linear-gradient(135deg, #22d3ee, #34d399)",
+              ][i],
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              opacity: 0.92,
+            }}>
+              {word}
+            </span>
+          ))}
+        </div>
+
         <p style={{
-          fontSize: "clamp(16px, 2vw, 21px)", color: "var(--text-secondary)",
-          margin: "24px auto 40px", lineHeight: 1.7, maxWidth: 580,
+          fontSize: "clamp(15px, 2vw, 19px)", color: "var(--text-secondary)",
+          margin: "28px auto 40px", lineHeight: 1.75, maxWidth: 560,
         }}>
-          Yazılım öğrencilerinin kurduğu açık bilgi platformu.<br />
-          <span style={{ color: "var(--text-primary)" }}>Blog, proje ve topluluk — hepsi burada.</span>
+          Yazılım öğrencilerinin kurduğu açık bilgi ve proje platformu.<br />
+          <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Blog, proje ve topluluk — hepsi burada.</span>
         </p>
 
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>

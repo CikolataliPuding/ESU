@@ -156,8 +156,8 @@ export default function JoinPage() {
           {step === 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {[
-                { label: "İsim Soyisim *",   key: "name",   type: "text",  placeholder: "Ada Lovelace",     mono: false },
-                { label: "E-posta *",         key: "email",  type: "email", placeholder: "ada@universe.com", mono: false },
+                { label: "İsim Soyisim *",   key: "name",   type: "text",  placeholder: "Umut Zaif",         mono: false },
+                { label: "E-posta *",         key: "email",  type: "email", placeholder: "ornek@esucodes.com", mono: false },
                 { label: "GitHub (isteğe bağlı)", key: "github", type: "text", placeholder: "github-username",  mono: true  },
               ].map(({ label, key, type, placeholder, mono }) => (
                 <div key={key}>

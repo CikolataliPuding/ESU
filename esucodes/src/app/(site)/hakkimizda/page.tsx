@@ -27,14 +27,6 @@ function GlowCard({ children, glowColor = "rgba(129,140,248,0.15)" }: { children
   );
 }
 
-const TIMELINE = [
-  { year: "2023 — BAŞLANGIÇ", icon: "Rocket", color: "#818cf8", title: "Bir Fikrin Doğuşu", text: "Üç yazılım öğrencisi bir araya geldi. Fikir basitti: öğrendiklerini paylaşmak, keşfettiklerini anlatmak. \"Neden kendi platformumuzu kurmayalım?\" sorusuyla her şey başladı." },
-  { year: "2023 — İLK ADIMLAR", icon: "Share2", color: "#22d3ee", title: "ESUcodes Kuruldu", text: "İlk blog yazıları yazıldı, ilk satırlar yayınlandı. Siber güvenlikten frontend'e, gömülü sistemlerden yapay zekaya — yazılım evreni bu küçük ekip için açılmaya başladı." },
-  { year: "2024 — DONANIM",    icon: "Users",  color: "#a78bfa", title: "PANKEK Projesi",   text: "Sadece kod yazmakla kalmadık. Arkadaşlarımızla birlikte bir otonom robot hayata geçirdik. Teoriden pratiğe, ekrandan devreye — C++, Arduino ve çok fazla hata ayıklama." },
-  { year: "2025 — YENİ NESIL", icon: "Eye",    color: "#34d399", title: "ESUcodes 2.0",     text: "Platform sıfırdan yeniden yazıldı. Next.js 14 App Router, yeni tasarım dili, yeni içerikler. Daha hızlı, daha güzel, daha ESUcodes." },
-  { year: "BUGÜN → ∞",         icon: "Compass",color: "#fb923c", title: "Galaksi Büyüyor",  text: "Kanban board geliştiriliyor, yeni üyeler aranıyor. Küçük bir ekipten büyük bir topluluğa giden yolda her adım sayılır. Sen de bu yolculuğun bir parçası olabilirsin." },
-];
-
 export default function AboutPage() {
   return (
     <div>
@@ -93,37 +85,6 @@ export default function AboutPage() {
                 </p>
               </div>
             </GlowCard>
-          </div>
-        </ScrollReveal>
-
-        {/* Timeline */}
-        <ScrollReveal delay={0.1}>
-          <div style={{ marginBottom: 80 }}>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <h2 style={{ fontSize: 36, fontWeight: 900, color: "var(--text-primary)", margin: "0 0 12px" }}>Hikayemiz</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: 17 }}>Başlangıçtan bugüne, küçük adımlarla büyük bir yolculuk</p>
-            </div>
-            <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 40px", borderRadius: 24, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
-              {TIMELINE.map((entry, i) => {
-                const Icon = ICONS[entry.icon] || Rocket;
-                const isLast = i === TIMELINE.length - 1;
-                return (
-                  <div key={entry.year} style={{ display: "flex", gap: 24 }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 9999, background: `${entry.color}20`, border: `2px solid ${entry.color}60`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 16px ${entry.color}30` }}>
-                        <Icon size={20} color={entry.color} />
-                      </div>
-                      {!isLast && <div style={{ width: 2, flexGrow: 1, minHeight: 32, background: "linear-gradient(to bottom, var(--border-subtle), transparent)", margin: "8px 0" }} />}
-                    </div>
-                    <div style={{ paddingBottom: isLast ? 0 : 40, paddingTop: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", color: entry.color, fontFamily: "var(--font-mono)", display: "block", marginBottom: 6 }}>{entry.year}</span>
-                      <h3 style={{ fontSize: 19, fontWeight: 800, color: "var(--text-primary)", margin: "0 0 8px" }}>{entry.title}</h3>
-                      <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.7, margin: 0 }}>{entry.text}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </ScrollReveal>
 

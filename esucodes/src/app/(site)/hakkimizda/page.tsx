@@ -54,6 +54,11 @@ export default function AboutPage() {
       </section>
 
       <div style={{ maxWidth: "var(--container-max)", margin: "0 auto", padding: "0 24px 96px" }}>
+        {/* Story intro */}
+        <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, textAlign: "center", maxWidth: 680, margin: "0 auto 64px" }}>
+          Her şey tek bir soruyla başladı: &ldquo;Kendi web siten olduğunu hayal ettin mi hiç?&rdquo; Cevap kısaydı — &ldquo;olur.&rdquo; Üç yazılım öğrencisi, bildiklerini kendine saklamanın anlamsızlığında birleşti ve gerisi, merakın peşinden gitmekten ibaretti.
+        </p>
+
         {/* Mission + Vision */}
         <ScrollReveal>
           <div className="grid-2" style={{ gap: 24, marginBottom: 80 }}>
@@ -64,11 +69,11 @@ export default function AboutPage() {
                   <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>Misyonumuz</h2>
                 </div>
                 <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, margin: "0 0 20px" }}>
-                  Öğrendiğimiz ve keşfettiğimiz yazılım bilgilerini paylaşarak genç geliştiricilere{" "}
-                  <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>açık, samimi ve anlaşılır</span> içerikler sunmak.
+                  Öğrendiğimizi saklamak yerine,{" "}
+                  <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>anlaşılır ve samimi</span> bir dille geri vermek. Bugün üç öğrenci olarak yazıyor, üretiyor ve bu platformu her gün biraz daha büyütüyoruz. Derdimiz parlamak değil; gerçekten öğrenen ve öğrendiğini aktaran bir yer olmak.
                 </p>
                 <blockquote style={{ fontSize: 16, fontStyle: "italic", color: "var(--text-primary)", borderLeft: "3px solid var(--accent-primary)", paddingLeft: 18, margin: 0, lineHeight: 1.7 }}>
-                  &ldquo;Bugün küçük bir ekip olarak çıktığımız bu yolda, üretmeye ve öğrendiklerimizi aktarmaya devam ederiz.&rdquo;
+                  &ldquo;Bilgi biriktirilmek için değil, yayılmak için vardır.&rdquo;
                 </blockquote>
               </div>
             </GlowCard>
@@ -80,11 +85,11 @@ export default function AboutPage() {
                   <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>Vizyonumuz</h2>
                 </div>
                 <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, margin: "0 0 16px" }}>
-                  Yazılım evreninin uçsuz bucaksız karanlığında{" "}
-                  <span style={{ color: "var(--accent-tertiary)", fontWeight: 700 }}>kendi galaksisini</span> oluşturan bir topluluk olmak.
+                  Kimi yapılar çevresini iter, kimileri çeker. Biz ikincisinden olmak istiyoruz — yazılım evreninde dağılmış ne varsa{" "}
+                  <span style={{ color: "var(--accent-tertiary)", fontWeight: 700 }}>yavaşça kendine toplayan, yaklaştıkça bırakmayan bir merkez</span>. Bilgi, er ya da geç yörüngemize girer; biz de onu içimize alır, kendimizin kılarız. Büyüdükçe çekim gücümüz artar.
                 </p>
                 <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, margin: 0 }}>
-                  Her alandan yazılımcının kendi gezegenini oluşturduğu, fakat aynı merkezde birleştiği — açık, üretken, meraklı bir ekosistem.
+                  Bugün üçüz. Ama ufkumuzda daha kalabalık bir şey var: yazılım öğrencilerinin bir araya geldiği, projelerini yönettiği, yazdığını paylaştığı, birbirine değdiği ve belki yollarını çizdiği bir merkez. Henüz küçük bir çekirdeğiz — ama merkezler hep küçük başlar. Sen de bu çekim alanına kapılabilirsin.
                 </p>
               </div>
             </GlowCard>

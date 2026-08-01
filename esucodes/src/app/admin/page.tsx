@@ -7,7 +7,7 @@ import {
   Plus, Pencil, Trash2, Eye, EyeOff, CheckCircle,
   ChevronRight, X, Save, Send, UsersRound, Globe, Bot,
   LayoutDashboard as LDash, Orbit, Shield, MessageSquare, ExternalLink, Inbox, XCircle,
-  Rocket, Terminal,
+  Rocket, Terminal, BarChart2, TrendingUp, MousePointerClick, Activity,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { RichEditor } from "@/components/editor/RichEditor";
@@ -20,13 +20,14 @@ type TeamMember = { id: string; name: string; role_title: string; bio: string | 
 type Project    = { id: string; name: string; tagline: string | null; description: string | null; tech: string[]; status: string; github_url: string | null; live_url: string | null; icon: string; accent_color: string; order_index: number };
 
 const NAV_ITEMS = [
-  { id: "overview",  label: "Genel Bakış",  icon: LayoutDashboard, adminOnly: false },
-  { id: "posts",     label: "Yazılar",      icon: FileText,         adminOnly: false },
-  { id: "comments",  label: "Yorumlar",     icon: MessageSquare,    adminOnly: true  },
-  { id: "applications", label: "Başvurular", icon: Inbox,           adminOnly: true  },
-  { id: "team",      label: "Ekip",         icon: UsersRound,       adminOnly: true  },
-  { id: "projects",  label: "Projeler",     icon: FolderOpen,       adminOnly: true  },
-  { id: "users",     label: "Kullanıcılar", icon: Shield,           adminOnly: true  },
+  { id: "overview",   label: "Genel Bakış",  icon: LayoutDashboard, adminOnly: false },
+  { id: "posts",      label: "Yazılar",      icon: FileText,         adminOnly: false },
+  { id: "analytics",  label: "Analitik",     icon: BarChart2,        adminOnly: true  },
+  { id: "comments",   label: "Yorumlar",     icon: MessageSquare,    adminOnly: true  },
+  { id: "applications", label: "Başvurular", icon: Inbox,            adminOnly: true  },
+  { id: "team",       label: "Ekip",         icon: UsersRound,       adminOnly: true  },
+  { id: "projects",   label: "Projeler",     icon: FolderOpen,       adminOnly: true  },
+  { id: "users",      label: "Kullanıcılar", icon: Shield,           adminOnly: true  },
 ];
 
 const PROJECT_ICONS: Record<string, React.ElementType> = { Globe, Bot, LDash, Orbit, FolderOpen };
@@ -235,6 +236,120 @@ function ProjectEditor({ project, onClose, onSave }: { project?: Project; onClos
           <button onClick={handleSave} disabled={saving} style={{ padding: "9px 20px", borderRadius: 10, background: "var(--accent-primary)", border: "none", color: "var(--bg-primary)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>{saving ? "Kaydediliyor..." : "Kaydet"}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Analytics Tab ─────────────────────────────────────────────────
+type AnalyticsData = {
+  totalViews: number; todayViews: number; weekViews: number;
+  topPosts: { id: string; title: string; slug: string; views: number }[];
+  daily: { date: string; views: number }[];
+};
+
+function AnalyticsTab() {
+  const [data, setData]       = useState<AnalyticsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/analytics/report")
+      .then((r) => r.ok ? r.json() : Promise.reject("Veri alınamadı."))
+      .then((d: AnalyticsData) => { setData(d); setLoading(false); })
+      .catch(() => { setError("Analitik verisi yüklenemedi."); setLoading(false); });
+  }, []);
+
+  if (loading) return <div style={{ textAlign: "center", padding: 80, color: "var(--text-muted)" }}>Yükleniyor...</div>;
+  if (error || !data) return (
+    <div style={{ textAlign: "center", padding: 80 }}>
+      <p style={{ color: "#f87171", marginBottom: 12 }}>{error ?? "Veri yok."}</p>
+      <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
+        Supabase&apos;de <code style={{ fontFamily: "var(--font-mono)", background: "var(--bg-tertiary)", padding: "2px 6px", borderRadius: 4 }}>page_views</code> tablosunu oluşturduğundan emin ol.
+      </p>
+    </div>
+  );
+
+  const maxViews = Math.max(...data.daily.map((d) => d.views), 1);
+  const statCards = [
+    { label: "Toplam Görüntülenme", value: data.totalViews, icon: Activity,          color: "#818cf8" },
+    { label: "Bu Hafta",            value: data.weekViews,  icon: TrendingUp,        color: "#22d3ee" },
+    { label: "Bugün",               value: data.todayViews, icon: MousePointerClick, color: "#34d399" },
+  ];
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 24px" }}>Analitik</h2>
+
+      {/* Stat cards */}
+      <div className="grid-3" style={{ gap: 16, marginBottom: 32 }}>
+        {statCards.map((s) => (
+          <div key={s.label} style={{ padding: "20px 22px", borderRadius: 16, background: "var(--glass-fill)", border: `1px solid ${s.color}25` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: `${s.color}18`, border: `1px solid ${s.color}30`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <s.icon size={17} color={s.color} />
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{s.label}</span>
+            </div>
+            <div style={{ fontSize: 40, fontWeight: 900, color: s.color, lineHeight: 1, letterSpacing: "-0.02em" }}>{s.value.toLocaleString("tr-TR")}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-2" style={{ gap: 24, alignItems: "start" }}>
+        {/* Weekly bar chart */}
+        <div style={{ padding: "22px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 20 }}>Son 7 Gün</div>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
+            {data.daily.map((d) => {
+              const pct = Math.max((d.views / maxViews) * 100, d.views > 0 ? 4 : 1);
+              const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("tr-TR", { weekday: "short" });
+              return (
+                <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%" }}>
+                  <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
+                    <div title={`${d.views} görüntülenme`} style={{ width: "100%", height: `${pct}%`, borderRadius: "4px 4px 0 0", background: "linear-gradient(180deg, #818cf8, #a78bfa)", opacity: d.views === 0 ? 0.2 : 1, transition: "opacity 0.2s" }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{dayLabel}</div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-primary)" }}>{d.views}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Top posts */}
+        <div style={{ padding: "22px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>En Çok Okunan Yazılar</div>
+          {data.topPosts.length === 0 ? (
+            <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center", padding: "20px 0" }}>Henüz veri yok.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {data.topPosts.map((p, i) => {
+                const maxP = data.topPosts[0].views || 1;
+                return (
+                  <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text-muted)", width: 18, flexShrink: 0 }}>#{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</div>
+                      <div style={{ marginTop: 4, height: 4, borderRadius: 9999, background: "var(--bg-tertiary)", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${(p.views / maxP) * 100}%`, borderRadius: 9999, background: "linear-gradient(90deg, #818cf8, #22d3ee)" }} />
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-primary)", flexShrink: 0 }}>{p.views}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {!process.env.NEXT_PUBLIC_GA_ID && (
+        <div style={{ marginTop: 24, padding: "16px 20px", borderRadius: 12, background: "rgba(251,146,60,0.08)", border: "1px solid rgba(251,146,60,0.25)" }}>
+          <p style={{ fontSize: 13, color: "#fb923c", margin: 0, fontFamily: "var(--font-mono)" }}>
+            {"// Google Analytics henüz bağlı değil — NEXT_PUBLIC_GA_ID env değişkenini ekle"}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -894,13 +1009,14 @@ export default function AdminPage() {
       </aside>
 
       <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
-        {tab === "overview"  && <OverviewTab stats={stats} pendingComments={pendingComments} pendingApplications={pendingApplications} />}
-        {tab === "posts"     && <PostsTab role={profile!.role} />}
-        {tab === "comments"  && profile?.role === "admin" && <CommentsTab onPendingChange={setPendingComments} />}
+        {tab === "overview"    && <OverviewTab stats={stats} pendingComments={pendingComments} pendingApplications={pendingApplications} />}
+        {tab === "posts"       && <PostsTab role={profile!.role} />}
+        {tab === "analytics"   && profile?.role === "admin" && <AnalyticsTab />}
+        {tab === "comments"    && profile?.role === "admin" && <CommentsTab onPendingChange={setPendingComments} />}
         {tab === "applications" && profile?.role === "admin" && <ApplicationsTab onPendingChange={setPendingApplications} />}
-        {tab === "team"      && profile?.role === "admin" && <TeamTab />}
-        {tab === "projects"  && profile?.role === "admin" && <ProjectsTab />}
-        {tab === "users"     && profile?.role === "admin" && <UsersTab />}
+        {tab === "team"        && profile?.role === "admin" && <TeamTab />}
+        {tab === "projects"    && profile?.role === "admin" && <ProjectsTab />}
+        {tab === "users"       && profile?.role === "admin" && <UsersTab />}
       </main>
     </div>
   );

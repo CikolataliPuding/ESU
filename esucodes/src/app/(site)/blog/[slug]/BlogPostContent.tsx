@@ -4,6 +4,7 @@ import { ArrowLeft, Calendar, Clock } from "lucide-react";
 import { CAT_COLORS } from "@/lib/data";
 import { CategoryBadge } from "@/components/PostCard";
 import { ShareButtons } from "./ShareButtons";
+import { ViewTracker } from "./ViewTracker";
 
 const CommentSection = dynamic(
   () => import("@/components/CommentSection").then((m) => ({ default: m.CommentSection })),
@@ -40,6 +41,7 @@ export function BlogPostContent({ post, related }: { post: DbPost; related: DbPo
 
   return (
     <div>
+      <ViewTracker postId={post.id} path={`/blog/${post.slug}`} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

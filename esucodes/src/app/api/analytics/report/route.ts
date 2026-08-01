@@ -5,7 +5,10 @@ export async function GET() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (!process.env.ADMIN_EMAIL || user.email !== process.env.ADMIN_EMAIL) {
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const role = (profile as { role: string } | null)?.role;
+  if (role !== "admin" && role !== "editor") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
@@ -15,12 +18,13 @@ export async function GET() {
   const today = new Date(now); today.setHours(0, 0, 0, 0);
   const week  = new Date(now); week.setDate(week.getDate() - 7);
 
-  const [totalRes, todayRes, weekRes, topRaw, dailyRaw] = await Promise.all([
+  const [totalRes, todayRes, weekRes, topRaw, dailyRaw, pagesRaw] = await Promise.all([
     admin.from("page_views").select("*", { count: "exact", head: true }),
     admin.from("page_views").select("*", { count: "exact", head: true }).gte("viewed_at", today.toISOString()),
     admin.from("page_views").select("*", { count: "exact", head: true }).gte("viewed_at", week.toISOString()),
     admin.from("page_views").select("post_id").not("post_id", "is", null),
     admin.from("page_views").select("viewed_at").gte("viewed_at", week.toISOString()),
+    admin.from("page_views").select("page_path"),
   ]);
 
   // Aggregate top posts (all-time)
@@ -54,11 +58,22 @@ export async function GET() {
     return { date: dateStr, views: dailyCounts[dateStr] ?? 0 };
   });
 
+  // Aggregate top pages by path
+  const pageCounts: Record<string, number> = {};
+  (pagesRaw.data ?? []).forEach((r: { page_path: string }) => {
+    pageCounts[r.page_path] = (pageCounts[r.page_path] ?? 0) + 1;
+  });
+  const topPages = Object.entries(pageCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 7)
+    .map(([path, views]) => ({ path, views }));
+
   return NextResponse.json({
     totalViews: totalRes.count ?? 0,
     todayViews: todayRes.count ?? 0,
     weekViews:  weekRes.count  ?? 0,
     topPosts,
+    topPages,
     daily,
   });
 }

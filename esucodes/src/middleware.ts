@@ -1,15 +1,13 @@
+import createMiddleware from "next-intl/middleware";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { routing } from "@/i18n/routing";
 import type { Role } from "@/lib/supabase/types";
 
-// NOT: middleware Edge runtime'da next/headers'ın cookies() API'sini kullanamıyor, bu yüzden
-// lib/auth.ts'teki getSessionRole() burada çağrılamıyor (route handler/server component'lerin
-// cookie adaptörü middleware'inkinden farklı). Aynı "profiles.role oku" sorgusu burada
-// bilinçli olarak yeniden yazıldı — bu, Next.js'in middleware/route-handler sınırından
-// kaynaklanan, kabul edilmiş tek istisna.
+const handleI18n = createMiddleware(routing);
+
 export async function middleware(request: NextRequest) {
-  // Production'da HTTP → HTTPS zorunlu yönlendirme
-  // Vercel/proxy arkasında x-forwarded-proto header'ı orijinal protokolü söyler
+  // 1. Production'da HTTP → HTTPS zorunlu yönlendirme
   if (
     process.env.NODE_ENV === "production" &&
     request.headers.get("x-forwarded-proto") === "http"
@@ -19,54 +17,75 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, { status: 301 });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return request.cookies.getAll(); },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
+  // 2. Admin rotaları: tam auth + cookie yönetimi
+  if (pathname.startsWith("/admin")) {
+    let supabaseResponse = NextResponse.next({ request });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll(); },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
         },
-      },
-    }
-  );
+      }
+    );
 
-  const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.redirect(new URL("/giris", request.url));
 
-  const getRole = async (): Promise<Role> => {
-    if (!user) return "member";
     const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    return (data as { role: Role } | null)?.role ?? "member";
-  };
-
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    if (!user) {
-      return NextResponse.redirect(new URL("/giris", request.url));
-    }
-    const role = await getRole();
+    const role = (data as { role: Role } | null)?.role ?? "member";
     if (role !== "editor" && role !== "admin") {
       return NextResponse.redirect(new URL("/", request.url));
     }
+
+    return supabaseResponse;
   }
 
-  // Giriş yapmış editor/admin /giris'e gelirse direkt /admin'e yönlendir
-  if (request.nextUrl.pathname === "/giris" && user) {
-    const role = await getRole();
-    if (role === "editor" || role === "admin") {
-      return NextResponse.redirect(new URL("/admin", request.url));
+  // 3. Giriş sayfasında oturum açmış admin'i /admin'e yönlendir
+  //    (/giris ve /en/giris her ikisini de kontrol et)
+  if (pathname === "/giris" || pathname === "/en/giris") {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return request.cookies.getAll(); },
+          setAll() {},
+        },
+      }
+    );
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      if (process.env.ADMIN_EMAIL && user.email === process.env.ADMIN_EMAIL) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+      const { data } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+      const role = (data as { role: Role } | null)?.role ?? "member";
+      if (role === "editor" || role === "admin") {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
     }
   }
 
-  return supabaseResponse;
+  // 4. Geri kalan her şey: next-intl dil yönlendirmesi
+  return handleI18n(request);
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/giris"],
+  matcher: [
+    // Exclude: _next, _vercel, api routes, static files
+    "/((?!api|_next|_vercel|.*\\..*).*)",
+    "/admin/:path*",
+  ],
 };

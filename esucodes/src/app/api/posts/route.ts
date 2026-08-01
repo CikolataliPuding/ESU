@@ -12,6 +12,7 @@ export const GET = withAuthErrors(async (req: NextRequest) => {
   const status   = searchParams.get("status");
   const category = searchParams.get("category");
   const slug     = searchParams.get("slug");
+  const lang     = searchParams.get("lang"); // "tr" | "en" | null (null = tümü, admin için)
 
   const session = await getSessionRole();
 
@@ -49,6 +50,7 @@ export const GET = withAuthErrors(async (req: NextRequest) => {
     query = query.eq("status", "published") as typeof query;
   }
   if (category) query = query.eq("category", category) as typeof query;
+  if (lang) query = query.eq("lang", lang) as typeof query;
 
   const { data, error } = await query;
   if (error) {

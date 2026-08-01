@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { UserPlus, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GradientHeading } from "@/components/GradientHeading";
 
 export default function RegisterPage() {
+  const t = useTranslations("auth");
   const [form, setForm]       = useState({ full_name: "", email: "", password: "", confirm: "" });
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
@@ -19,11 +21,11 @@ export default function RegisterPage() {
     setError(null);
 
     if (form.password !== form.confirm) {
-      setError("Şifreler eşleşmiyor.");
+      setError(t("passwordMismatch"));
       return;
     }
     if (form.password.length < 6) {
-      setError("Şifre en az 6 karakter olmalı.");
+      setError(t("passwordTooShort"));
       return;
     }
 
@@ -55,12 +57,12 @@ export default function RegisterPage() {
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
       <div style={{ maxWidth: 420 }}>
         <div style={{ fontSize: 64, marginBottom: 20 }}>📬</div>
-        <GradientHeading as="h1" size="4xl" gradient="accent" align="center">Neredeyse tamam!</GradientHeading>
+        <GradientHeading as="h1" size="4xl" gradient="accent" align="center">{t("successTitle")}</GradientHeading>
         <p style={{ color: "var(--text-secondary)", marginTop: 16, lineHeight: 1.7, fontSize: 16 }}>
-          <strong style={{ color: "var(--text-primary)" }}>{form.email}</strong> adresine doğrulama maili gönderdik. Maili onayla ve giriş yap.
+          <strong style={{ color: "var(--text-primary)" }}>{form.email}</strong> {t("successText")}
         </p>
         <Link href="/giris" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 28, padding: "12px 24px", borderRadius: 12, background: "var(--accent-primary)", color: "var(--bg-primary)", textDecoration: "none", fontWeight: 700 }}>
-          Giriş Sayfasına Git
+          {t("goToSignin")}
         </Link>
       </div>
     </div>
@@ -73,10 +75,10 @@ export default function RegisterPage() {
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: 16, background: "rgba(129,140,248,0.15)", border: "1px solid rgba(129,140,248,0.3)", marginBottom: 20 }}>
             <UserPlus size={26} color="var(--accent-primary)" />
           </div>
-          <GradientHeading as="h1" size="4xl" gradient="accent" align="center">Kayıt Ol</GradientHeading>
+          <GradientHeading as="h1" size="4xl" gradient="accent" align="center">{t("signup")}</GradientHeading>
           <p style={{ color: "var(--text-muted)", marginTop: 8, fontSize: 15 }}>
-            Zaten hesabın var mı?{" "}
-            <Link href="/giris" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Giriş yap</Link>
+            {t("hasAccount")}{" "}
+            <Link href="/giris" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>{t("signinLink")}</Link>
           </p>
         </div>
 
@@ -88,8 +90,8 @@ export default function RegisterPage() {
           )}
 
           {[
-            { label: "Ad Soyad", key: "full_name", type: "text", placeholder: "Umut Zaif" },
-            { label: "E-posta",  key: "email",     type: "email", placeholder: "ornek@esucodes.com" },
+            { label: t("fullName"), key: "full_name", type: "text",  placeholder: t("fullNamePlaceholder") },
+            { label: t("email"),    key: "email",     type: "email", placeholder: t("emailPlaceholder") },
           ].map(({ label, key, type, placeholder }) => (
             <div key={key}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{label}</label>
@@ -106,12 +108,12 @@ export default function RegisterPage() {
           ))}
 
           <div>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>Şifre</label>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{t("password")}</label>
             <div style={{ position: "relative" }}>
               <input
                 type={showPass ? "text" : "password"} required
                 value={form.password} onChange={(e) => set("password", e.target.value)}
-                placeholder="En az 6 karakter"
+                placeholder={t("passwordMinHint")}
                 style={{ ...inputStyle, paddingRight: 46 }}
                 onFocus={(e) => (e.target.style.borderColor = "var(--accent-primary)")}
                 onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
@@ -123,7 +125,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>Şifre Tekrar</label>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{t("confirmPassword")}</label>
             <input
               type="password" required
               value={form.confirm} onChange={(e) => set("confirm", e.target.value)}
@@ -138,7 +140,7 @@ export default function RegisterPage() {
             type="submit" disabled={loading}
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", borderRadius: 12, background: "linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary))", color: "#fff", fontSize: 15, fontWeight: 700, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, marginTop: 4 }}
           >
-            <UserPlus size={18} /> {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+            <UserPlus size={18} /> {loading ? t("registering") : t("signupButton")}
           </button>
         </form>
       </div>

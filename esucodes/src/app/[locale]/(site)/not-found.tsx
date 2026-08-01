@@ -1,7 +1,11 @@
-import Link from "next/link";
+"use client";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Home, BookOpen } from "lucide-react";
 
 export default function NotFound() {
+  const t = useTranslations("common");
+
   return (
     <div style={{
       minHeight: "calc(100vh - 80px)",
@@ -33,7 +37,7 @@ export default function NotFound() {
                 TRANSMISSION LOST — MCC HOUSTON
               </div>
               <div style={{ fontSize: 22, fontWeight: 900, color: "var(--text-primary)", lineHeight: 1.2 }}>
-                &quot;Houston, burada bir sorun var.&quot;
+                &quot;Houston, we have a problem.&quot;
               </div>
             </div>
           </div>
@@ -48,14 +52,14 @@ export default function NotFound() {
               }} />
             ))}
             <span style={{ marginLeft: 8, fontFamily: "var(--font-mono)", fontSize: 12, color: "#f87171", alignSelf: "center" }}>
-              SİNYAL YOK
+              NO SIGNAL
             </span>
           </div>
 
           <div style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6, textAlign: "left", background: "var(--bg-primary)", padding: "12px 16px", borderRadius: 10, border: "1px solid var(--border-subtle)" }}>
-            <div><span style={{ color: "#f87171" }}>ERR</span> 404 — Hedef koordinat bulunamadı</div>
+            <div><span style={{ color: "#f87171" }}>ERR</span> 404 — Target coordinate not found</div>
             <div><span style={{ color: "var(--accent-tertiary)" }}>$</span> ping universe.esucodes.com<span style={{ color: "#f87171" }}> — timeout</span></div>
-            <div><span style={{ color: "var(--accent-primary)" }}>HINT</span> Bilinen uzaya geri dön<span style={{ animation: "esu-caret 1s steps(1) infinite" }}>_</span></div>
+            <div><span style={{ color: "var(--accent-primary)" }}>HINT</span> Return to known space<span style={{ animation: "esu-caret 1s steps(1) infinite" }}>_</span></div>
           </div>
         </div>
 
@@ -66,17 +70,16 @@ export default function NotFound() {
           backgroundClip: "text", marginBottom: 16, letterSpacing: "-0.04em",
         }}>404</div>
 
-        <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.7, margin: "0 0 36px" }}>
-          Bu sayfa ya silinmiş, ya taşınmış ya da hiç var olmamış.<br />
-          Yazılım evreninde kaybolmak bu kadar kolay.
+        <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.7, margin: "0 0 36px", whiteSpace: "pre-line" }}>
+          {t("notFoundText")}
         </p>
 
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
           <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 28px", borderRadius: 12, textDecoration: "none", background: "var(--accent-primary)", color: "var(--bg-primary)", fontSize: 15, fontWeight: 700 }}>
-            <Home size={18} /> Anasayfaya Dön
+            <Home size={18} /> {t("backHome")}
           </Link>
           <Link href="/blog" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 28px", borderRadius: 12, textDecoration: "none", background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", color: "var(--text-primary)", fontSize: 15, fontWeight: 700 }}>
-            <BookOpen size={18} /> Blog&apos;a Git
+            <BookOpen size={18} /> {t("goToBlog")}
           </Link>
         </div>
       </div>

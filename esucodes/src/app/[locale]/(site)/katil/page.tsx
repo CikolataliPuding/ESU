@@ -1,17 +1,17 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Monitor, Server, Shield, Cpu, PenLine, FlaskConical, CheckCircle, ChevronLeft, ChevronRight, Send, Sparkles, Rocket, BookOpen, Users, Star, AlertCircle } from "lucide-react";
 import { JOIN_ROLES, LEVELS } from "@/lib/data";
 import { GradientHeading } from "@/components/GradientHeading";
 
-const STEP_LABELS = ["Kimsin?", "İlgi Alanın", "Motivasyon"];
-
 const ICONS: Record<string, React.ElementType> = { Monitor, Server, Shield, Cpu, PenLine, FlaskConical };
 
-function StepIndicator({ current }: { current: number }) {
+function StepIndicator({ current, labels }: { current: number; labels: string[] }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 40 }}>
-      {STEP_LABELS.map((label, i) => {
+      {labels.map((label, i) => {
         const done   = i < current;
         const active = i === current;
         return (
@@ -29,7 +29,7 @@ function StepIndicator({ current }: { current: number }) {
               </div>
               <span style={{ fontSize: 12, color: active ? "var(--text-primary)" : "var(--text-muted)", fontWeight: active ? 600 : 400 }}>{label}</span>
             </div>
-            {i < STEP_LABELS.length - 1 && (
+            {i < labels.length - 1 && (
               <div style={{ width: 48, height: 2, marginBottom: 20, background: i < current ? "var(--accent-primary)" : "var(--border-subtle)", borderRadius: 2, transition: "background 0.4s" }} />
             )}
           </div>
@@ -39,29 +39,28 @@ function StepIndicator({ current }: { current: number }) {
   );
 }
 
-function SuccessScreen({ name, onHome }: { name: string; onHome: () => void }) {
+function SuccessScreen({ name, onHome, t }: { name: string; onHome: () => void; t: (key: string, opts?: Record<string, unknown>) => string }) {
   const [count, setCount] = useState(5);
   useState(() => {
-    const t = setInterval(() => {
+    const timer = setInterval(() => {
       setCount((c) => {
-        if (c <= 1) { clearInterval(t); onHome(); return 0; }
+        if (c <= 1) { clearInterval(timer); onHome(); return 0; }
         return c - 1;
       });
     }, 1000);
-    return () => clearInterval(t);
+    return () => clearInterval(timer);
   });
 
   return (
     <div style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, textAlign: "center" }}>
       <div style={{ maxWidth: 560 }}>
         <div style={{ fontSize: 72, marginBottom: 24 }}>🚀</div>
-        <GradientHeading as="h1" size="5xl" gradient="galactic" align="center" glow>Başvurun Alındı!</GradientHeading>
+        <GradientHeading as="h1" size="5xl" gradient="galactic" align="center" glow>{t("successTitle")}</GradientHeading>
         <p style={{ fontSize: 18, color: "var(--text-secondary)", marginTop: 16, lineHeight: 1.7 }}>
-          Teşekkürler, <strong style={{ color: "var(--text-primary)" }}>{name}</strong>!<br />
-          Başvurunu inceleyip en kısa sürede sana geri döneceğiz. Galaksiyi beraber keşfedelim.
+          <strong style={{ color: "var(--text-primary)" }}>{name}</strong> — {t("successText")}
         </p>
         <p style={{ fontSize: 14, color: "var(--text-muted)", marginTop: 32 }}>
-          {count} saniyede anasayfaya yönlendiriliyorsun...
+          {t("successRedirect", { count })}
         </p>
       </div>
     </div>
@@ -69,6 +68,8 @@ function SuccessScreen({ name, onHome }: { name: string; onHome: () => void }) {
 }
 
 export default function JoinPage() {
+  const t = useTranslations("join");
+  const router = useRouter();
   const [step, setStep]           = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -77,6 +78,8 @@ export default function JoinPage() {
 
   const set = (key: string, val: unknown) => setForm((f) => ({ ...f, [key]: val }));
   const toggleRole = (id: string) => set("roles", form.roles.includes(id) ? form.roles.filter((r) => r !== id) : [...form.roles, id]);
+
+  const stepLabels = [t("stepWho"), t("stepInterests"), t("stepMotivation")];
 
   const canNext = [
     form.name.trim().length > 1 && form.email.includes("@"),
@@ -95,25 +98,25 @@ export default function JoinPage() {
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        setError(d.error ?? "Başvuru gönderilemedi. Birazdan tekrar dene.");
+        setError(d.error ?? t("errorSend"));
         setSubmitting(false);
         return;
       }
       setSubmitted(true);
     } catch {
-      setError("Bağlantı hatası. İnternetini kontrol edip tekrar dene.");
+      setError(t("errorNetwork"));
       setSubmitting(false);
     }
   };
 
   const PERKS = [
-    { icon: Rocket,   color: "#818cf8", title: "Gerçek Projeler", text: "Sahte değil, gerçekten çalışan projelerde yer al." },
-    { icon: BookOpen, color: "#22d3ee", title: "Öğren ve Öğret",  text: "Blog yaz, bildiklerini paylaş, yenilerini öğren." },
-    { icon: Users,    color: "#a78bfa", title: "Topluluk",         text: "Aynı tutkuyu paylaşan insanlarla bağlantı kur." },
-    { icon: Star,     color: "#fb923c", title: "Kendi Projen",     text: "Fikirlerini burada hayata geçirebilirsin." },
+    { icon: Rocket,   color: "#818cf8", title: t("perkRealProjectsTitle"), text: t("perkRealProjectsText") },
+    { icon: BookOpen, color: "#22d3ee", title: t("perkLearnTitle"),        text: t("perkLearnText") },
+    { icon: Users,    color: "#a78bfa", title: t("perkCommunityTitle"),    text: t("perkCommunityText") },
+    { icon: Star,     color: "#fb923c", title: t("perkYourProjectTitle"),  text: t("perkYourProjectText") },
   ];
 
-  if (submitted) return <SuccessScreen name={form.name} onHome={() => { window.location.href = "/"; }} />;
+  if (submitted) return <SuccessScreen name={form.name} onHome={() => { router.push("/"); }} t={t as (key: string, opts?: Record<string, unknown>) => string} />;
 
   return (
     <div>
@@ -122,12 +125,11 @@ export default function JoinPage() {
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 18px", borderRadius: 9999, background: "rgba(34,211,238,0.12)", border: "1px solid rgba(34,211,238,0.3)", marginBottom: 20 }}>
             <Sparkles size={14} color="var(--accent-tertiary)" />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-tertiary)" }}>Yeni üye alımı açık</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--accent-tertiary)" }}>{t("badge")}</span>
           </div>
-          <GradientHeading as="h1" size="7xl" gradient="galactic" align="center" glow>Galaksiye Katıl</GradientHeading>
+          <GradientHeading as="h1" size="7xl" gradient="galactic" align="center" glow>{t("heroTitle")}</GradientHeading>
           <p style={{ fontSize: 20, color: "var(--text-secondary)", marginTop: 16, lineHeight: 1.65 }}>
-            Yazılım öğrencisi misin? ESUcodes ekibine katılarak gerçek projeler üret,<br />
-            blog yaz ve topluluğumuzun bir parçası ol.
+            {t("heroSubtitle")}
           </p>
         </div>
       </section>
@@ -150,15 +152,15 @@ export default function JoinPage() {
       {/* Form */}
       <section style={{ maxWidth: 640, margin: "0 auto", padding: "0 24px 120px" }}>
         <div style={{ padding: "40px 36px", borderRadius: 24, background: "var(--glass-fill-strong)", border: "1px solid rgba(129,140,248,0.25)" }}>
-          <StepIndicator current={step} />
+          <StepIndicator current={step} labels={stepLabels} />
 
           {/* Step 0 */}
           {step === 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               {[
-                { label: "İsim Soyisim *",   key: "name",   type: "text",  placeholder: "Umut Zaif",         mono: false },
-                { label: "E-posta *",         key: "email",  type: "email", placeholder: "ornek@esucodes.com", mono: false },
-                { label: "GitHub (isteğe bağlı)", key: "github", type: "text", placeholder: "github-username",  mono: true  },
+                { label: t("name") + " *",  key: "name",   type: "text",  placeholder: t("namePlaceholder"),   mono: false },
+                { label: t("email") + " *",  key: "email",  type: "email", placeholder: t("emailPlaceholder"),  mono: false },
+                { label: t("github"),         key: "github", type: "text", placeholder: t("githubPlaceholder"),  mono: true  },
               ].map(({ label, key, type, placeholder, mono }) => (
                 <div key={key}>
                   <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{label}</label>
@@ -180,7 +182,7 @@ export default function JoinPage() {
           {step === 1 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div>
-                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>Hangi alanlarda katkı sağlamak istersin? *</label>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>{t("rolesLabel")}</label>
                 <div className="grid-2" style={{ gap: 12 }}>
                   {JOIN_ROLES.map((role) => {
                     const active = form.roles.includes(role.id);
@@ -202,7 +204,7 @@ export default function JoinPage() {
                 </div>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>Deneyim Seviyesi *</label>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 12 }}>{t("level")}</label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                   {LEVELS.map((l) => {
                     const active = form.level === l;
@@ -225,17 +227,17 @@ export default function JoinPage() {
           {step === 2 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div>
-                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>Neden ESUcodes? *</label>
+                <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{t("whyLabel")}</label>
                 <textarea
                   rows={7}
-                  placeholder="ESUcodes'a katılmak istememin sebebi..."
+                  placeholder={t("whyPlaceholder")}
                   value={form.message}
                   onChange={(e) => set("message", e.target.value)}
                   style={{ width: "100%", padding: "14px 16px", fontFamily: "var(--font-sans)", fontSize: 15, color: "var(--text-primary)", lineHeight: 1.65, background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)", borderRadius: 12, outline: "none", resize: "vertical", transition: "border-color 0.2s", boxSizing: "border-box" }}
                   onFocus={(e) => (e.target.style.borderColor = "var(--accent-primary)")}
                   onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
                 />
-                <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "6px 0 0", textAlign: "right" }}>{form.message.length} karakter</p>
+                <p style={{ fontSize: 12, color: "var(--text-muted)", margin: "6px 0 0", textAlign: "right" }}>{form.message.length} {t("chars")}</p>
               </div>
               <div style={{ padding: "16px 20px", borderRadius: 12, background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.8 }}>
                 <strong style={{ color: "var(--text-primary)" }}>{form.name}</strong> · {form.email}
@@ -255,16 +257,16 @@ export default function JoinPage() {
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 32, paddingTop: 24, borderTop: "1px solid var(--border-subtle)" }}>
             {step > 0 ? (
               <button onClick={() => setStep((s) => s - 1)} style={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, padding: "10px 20px", borderRadius: 10, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)", fontSize: 15, fontWeight: 600 }}>
-                <ChevronLeft size={18} /> Geri
+                <ChevronLeft size={18} /> {t("back")}
               </button>
             ) : <div />}
-            {step < STEP_LABELS.length - 1 ? (
+            {step < stepLabels.length - 1 ? (
               <button onClick={() => canNext[step] && setStep((s) => s + 1)} disabled={!canNext[step]} style={{ all: "unset", cursor: canNext[step] ? "pointer" : "not-allowed", display: "flex", alignItems: "center", gap: 6, padding: "10px 24px", borderRadius: 10, background: canNext[step] ? "var(--accent-primary)" : "var(--glass-fill)", border: `1px solid ${canNext[step] ? "var(--accent-primary)" : "var(--border-subtle)"}`, color: canNext[step] ? "var(--bg-primary)" : "var(--text-muted)", fontSize: 15, fontWeight: 700, opacity: canNext[step] ? 1 : 0.5 }}>
-                Devam <ChevronRight size={18} />
+                {t("next")} <ChevronRight size={18} />
               </button>
             ) : (
               <button onClick={() => canNext[2] && !submitting && handleSubmit()} disabled={!canNext[2] || submitting} style={{ all: "unset", cursor: canNext[2] && !submitting ? "pointer" : "not-allowed", display: "flex", alignItems: "center", gap: 8, padding: "10px 24px", borderRadius: 10, background: canNext[2] ? "linear-gradient(135deg, var(--accent-primary), var(--accent-tertiary))" : "var(--glass-fill)", color: canNext[2] ? "#fff" : "var(--text-muted)", fontSize: 15, fontWeight: 700, opacity: canNext[2] ? (submitting ? 0.7 : 1) : 0.5 }}>
-                <Send size={18} /> {submitting ? "Gönderiliyor..." : "Başvuruyu Gönder"}
+                <Send size={18} /> {submitting ? t("submitting") : t("submit")}
               </button>
             )}
           </div>

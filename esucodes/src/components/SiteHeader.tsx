@@ -1,26 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Terminal, LogOut, LayoutDashboard } from "lucide-react";
-import { NAV } from "@/lib/data";
+import { useRouter, usePathname } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { Terminal, LogOut, LayoutDashboard, Globe } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export function SiteHeader() {
+  const t        = useTranslations();
+  const locale   = useLocale();
   const pathname = usePathname();
   const router   = useRouter();
 
-  const [loggedIn, setLoggedIn]     = useState(false);
+  const [loggedIn, setLoggedIn]         = useState(false);
   const [canAccessAdmin, setCanAccessAdmin] = useState(false);
 
-  // onAuthStateChange Supabase'in lokal oturum kopyasını okuyarak abone olur
-  // anında (INITIAL_SESSION) tetiklenir; ekstra bir ağ çağrısı gerektirmez.
   useEffect(() => {
     const supabase = createClient();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       setLoggedIn(!!session);
       if (!session) { setCanAccessAdmin(false); return; }
-      // Sadece giriş yapmış kullanıcı için, mevcut /api/auth/is-admin endpoint'i tekrar kullanılır.
       fetch("/api/auth/is-admin")
         .then((res) => res.json())
         .then((data: { isAdmin: boolean }) => setCanAccessAdmin(data.isAdmin))
@@ -34,6 +33,18 @@ export function SiteHeader() {
     router.push("/");
     router.refresh();
   };
+
+  const switchLocale = () => {
+    router.replace(pathname, { locale: locale === "tr" ? "en" : "tr" });
+  };
+
+  const navItems = [
+    { id: "projects", label: t("nav.projects"), href: "/projeler" as const },
+    { id: "blog",     label: t("nav.blog"),     href: "/blog"     as const },
+    { id: "team",     label: t("nav.team"),     href: "/murettebat" as const },
+    { id: "about",    label: t("nav.about"),    href: "/hakkimizda" as const },
+    { id: "join",     label: t("nav.join"),     href: "/katil"    as const },
+  ] as const;
 
   return (
     <header style={{
@@ -55,47 +66,68 @@ export function SiteHeader() {
         </Link>
 
         <nav className="desktop-only-nav" style={{ display: "flex", alignItems: "center", gap: 28 }}>
-          {NAV.map((link) => (
-            <NavLink key={link.id} href={link.href} active={pathname === link.href} highlight={link.id === "join"}>
-              {link.label}
+          {navItems.map((item) => (
+            <NavLink key={item.id} href={item.href} active={pathname === item.href} highlight={item.id === "join"}>
+              {item.label}
             </NavLink>
           ))}
         </nav>
 
-        {loggedIn ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {canAccessAdmin && (
-              <Link href="/admin" style={{
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Language switcher */}
+          <button
+            onClick={switchLocale}
+            title={locale === "tr" ? "Switch to English" : "Türkçe'ye geç"}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "6px 12px", borderRadius: 9999,
+              background: "var(--glass-fill)", border: "1px solid var(--border-subtle)",
+              color: "var(--text-secondary)", fontSize: 13, fontWeight: 700,
+              cursor: "pointer", transition: "all 0.2s",
+              fontFamily: "var(--font-mono)",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--accent-primary)"; e.currentTarget.style.color = "var(--accent-primary)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border-subtle)"; e.currentTarget.style.color = "var(--text-secondary)"; }}
+          >
+            <Globe size={13} />
+            {locale === "tr" ? "EN" : "TR"}
+          </button>
+
+          {loggedIn ? (
+            <>
+              {canAccessAdmin && (
+                <a href="/admin" style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "7px 16px", borderRadius: 9999,
+                  background: "rgba(129,140,248,0.12)", border: "1px solid rgba(129,140,248,0.4)",
+                  color: "var(--accent-primary)", fontSize: 14, fontWeight: 700, textDecoration: "none",
+                  transition: "all 0.22s ease",
+                }}>
+                  <LayoutDashboard size={16} /> {t("header.dashboard")}
+                </a>
+              )}
+              <button onClick={handleLogout} style={{
                 display: "flex", alignItems: "center", gap: 8,
                 padding: "7px 16px", borderRadius: 9999,
-                background: "rgba(129,140,248,0.12)", border: "1px solid rgba(129,140,248,0.4)",
-                color: "var(--accent-primary)", fontSize: 14, fontWeight: 700, textDecoration: "none",
-                transition: "all 0.22s ease",
+                background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.4)",
+                color: "#f87171", fontSize: 14, fontWeight: 700,
+                cursor: "pointer", transition: "all 0.22s ease",
               }}>
-                <LayoutDashboard size={16} /> Panel
-              </Link>
-            )}
-            <button onClick={handleLogout} style={{
+                <LogOut size={16} /> {t("header.signout")}
+              </button>
+            </>
+          ) : (
+            <Link href="/giris" style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: "7px 16px", borderRadius: 9999,
-              background: "rgba(248,113,113,0.12)", border: "1px solid rgba(248,113,113,0.4)",
-              color: "#f87171", fontSize: 14, fontWeight: 700,
-              cursor: "pointer", transition: "all 0.22s ease",
+              background: "rgba(34,211,238,0.12)", border: "1px solid rgba(34,211,238,0.4)",
+              color: "var(--accent-tertiary)", fontSize: 14, fontWeight: 700, textDecoration: "none",
+              transition: "all 0.22s ease",
             }}>
-              <LogOut size={16} /> Çıkış
-            </button>
-          </div>
-        ) : (
-          <Link href="/giris" style={{
-            display: "flex", alignItems: "center", gap: 8,
-            padding: "7px 16px", borderRadius: 9999,
-            background: "rgba(34,211,238,0.12)", border: "1px solid rgba(34,211,238,0.4)",
-            color: "var(--accent-tertiary)", fontSize: 14, fontWeight: 700, textDecoration: "none",
-            transition: "all 0.22s ease",
-          }}>
-            <Terminal size={16} /> Giriş
-          </Link>
-        )}
+              <Terminal size={16} /> {t("header.signin")}
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -111,7 +143,7 @@ function NavLink({ children, href, active, highlight }: {
 
   if (highlight) {
     return (
-      <Link href={href} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{
+      <Link href={href as "/"} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{
         background: active ? "var(--accent-primary)" : hover ? "rgba(129,140,248,0.15)" : "transparent",
         border: `1px solid ${active ? "var(--accent-primary)" : "rgba(129,140,248,0.4)"}`,
         borderRadius: 9999, padding: "5px 16px",
@@ -125,7 +157,7 @@ function NavLink({ children, href, active, highlight }: {
   }
 
   return (
-    <Link href={href} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{
+    <Link href={href as "/"} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{
       position: "relative", textDecoration: "none",
       fontSize: 15, padding: "4px 0",
       color: active || hover ? "var(--text-primary)" : "var(--text-secondary)",

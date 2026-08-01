@@ -7,15 +7,15 @@ import {
   Plus, Pencil, Trash2, Eye, EyeOff, CheckCircle,
   ChevronRight, X, Save, Send, UsersRound, Globe, Bot,
   LayoutDashboard as LDash, Orbit, Shield, MessageSquare, ExternalLink, Inbox, XCircle,
-  Rocket, Terminal, BarChart2, TrendingUp, MousePointerClick, Activity,
+  Rocket, Terminal, BarChart2, TrendingUp, MousePointerClick, Activity, Palette,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { RichEditor } from "@/components/editor/RichEditor";
-import { CATEGORIES, NAV, JOIN_ROLES } from "@/lib/data";
+import { CATEGORIES, CAT_COLORS, NAV, JOIN_ROLES } from "@/lib/data";
 import type { Role } from "@/lib/supabase/types";
 
 type Profile    = { id: string; role: Role; full_name: string | null; username: string | null };
-type Post       = { id: string; title: string; slug: string; category: string; status: string; published_at: string | null; read_time: string | null; excerpt?: string; content?: string; cover_image?: string };
+type Post       = { id: string; title: string; slug: string; category: string; status: string; published_at: string | null; read_time: string | null; excerpt?: string; content?: string; cover_image?: string; lang?: string };
 type TeamMember = { id: string; name: string; role_title: string; bio: string | null; skills: string[]; github_url: string | null; linkedin_url: string | null; order_index: number };
 type Project    = { id: string; name: string; tagline: string | null; description: string | null; tech: string[]; status: string; github_url: string | null; live_url: string | null; icon: string; accent_color: string; order_index: number };
 
@@ -28,6 +28,7 @@ const NAV_ITEMS = [
   { id: "team",       label: "Ekip",         icon: UsersRound,       adminOnly: true  },
   { id: "projects",   label: "Projeler",     icon: FolderOpen,       adminOnly: true  },
   { id: "users",      label: "Kullanıcılar", icon: Shield,           adminOnly: true  },
+  { id: "categories", label: "Kategoriler",  icon: Palette,          adminOnly: true  },
 ];
 
 const PROJECT_ICONS: Record<string, React.ElementType> = { Globe, Bot, LDash, Orbit, FolderOpen };
@@ -56,10 +57,20 @@ const labelStyle: React.CSSProperties = {
 
 // ── Post Editor ────────────────────────────────────────────────────
 function PostEditor({ post, onClose, onSave }: { post?: Post; onClose: () => void; onSave: () => void }) {
-  const [form, setForm] = useState({ title: post?.title ?? "", slug: post?.slug ?? "", excerpt: post?.excerpt ?? "", content: post?.content ?? "", category: post?.category ?? CATEGORIES[0], read_time: post?.read_time ?? "", cover_image: post?.cover_image ?? "" });
-  const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState<string | null>(null);
+  const [form, setForm]       = useState({ title: post?.title ?? "", slug: post?.slug ?? "", excerpt: post?.excerpt ?? "", content: post?.content ?? "", category: post?.category ?? CATEGORIES[1] ?? "AI", read_time: post?.read_time ?? "", cover_image: post?.cover_image ?? "", lang: post?.lang ?? "tr" });
+  const [availCats, setAvailCats] = useState<string[]>(CATEGORIES.filter((c) => c !== "Tümü"));
+  const [saving, setSaving]   = useState(false);
+  const [error, setError]     = useState<string | null>(null);
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((cats: { name: string }[]) => {
+        if (Array.isArray(cats) && cats.length > 0) setAvailCats(cats.map((c) => c.name));
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSave = async (status: "draft" | "published") => {
     if (!form.title.trim() || !form.content.trim()) { setError("Başlık ve içerik zorunlu."); return; }
@@ -105,7 +116,13 @@ function PostEditor({ post, onClose, onSave }: { post?: Post; onClose: () => voi
           ))}
           <div><label style={labelStyle}>KATEGORİ</label>
             <select value={form.category} onChange={(e) => set("category", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {availCats.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div><label style={labelStyle}>DİL</label>
+            <select value={form.lang} onChange={(e) => set("lang", e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+              <option value="tr">🇹🇷 Türkçe</option>
+              <option value="en">🇬🇧 English</option>
             </select>
           </div>
           {form.cover_image && <img src={form.cover_image} alt="cover" style={{ width: "100%", height: 110, objectFit: "cover", borderRadius: 8, border: "1px solid var(--border-subtle)" }} />}
@@ -244,6 +261,7 @@ function ProjectEditor({ project, onClose, onSave }: { project?: Project; onClos
 type AnalyticsData = {
   totalViews: number; todayViews: number; weekViews: number;
   topPosts: { id: string; title: string; slug: string; views: number }[];
+  topPages: { path: string; views: number }[];
   daily: { date: string; views: number }[];
 };
 
@@ -295,27 +313,27 @@ function AnalyticsTab() {
         ))}
       </div>
 
-      <div className="grid-2" style={{ gap: 24, alignItems: "start" }}>
-        {/* Weekly bar chart */}
-        <div style={{ padding: "22px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 20 }}>Son 7 Gün</div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
-            {data.daily.map((d) => {
-              const pct = Math.max((d.views / maxViews) * 100, d.views > 0 ? 4 : 1);
-              const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("tr-TR", { weekday: "short" });
-              return (
-                <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%" }}>
-                  <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
-                    <div title={`${d.views} görüntülenme`} style={{ width: "100%", height: `${pct}%`, borderRadius: "4px 4px 0 0", background: "linear-gradient(180deg, #818cf8, #a78bfa)", opacity: d.views === 0 ? 0.2 : 1, transition: "opacity 0.2s" }} />
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{dayLabel}</div>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-primary)" }}>{d.views}</div>
+      {/* Weekly bar chart */}
+      <div style={{ padding: "22px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 20 }}>Son 7 Gün</div>
+        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
+          {data.daily.map((d) => {
+            const pct = Math.max((d.views / maxViews) * 100, d.views > 0 ? 4 : 1);
+            const dayLabel = new Date(d.date + "T12:00:00").toLocaleDateString("tr-TR", { weekday: "short" });
+            return (
+              <div key={d.date} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, height: "100%" }}>
+                <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
+                  <div title={`${d.views} görüntülenme`} style={{ width: "100%", height: `${pct}%`, borderRadius: "4px 4px 0 0", background: "linear-gradient(180deg, #818cf8, #a78bfa)", opacity: d.views === 0 ? 0.2 : 1, transition: "opacity 0.2s" }} />
                 </div>
-              );
-            })}
-          </div>
+                <div style={{ fontSize: 11, color: "var(--text-muted)", whiteSpace: "nowrap" }}>{dayLabel}</div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-primary)" }}>{d.views}</div>
+              </div>
+            );
+          })}
         </div>
+      </div>
 
+      <div className="grid-2" style={{ gap: 24, alignItems: "start" }}>
         {/* Top posts */}
         <div style={{ padding: "22px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>En Çok Okunan Yazılar</div>
@@ -335,6 +353,33 @@ function AnalyticsTab() {
                       </div>
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-primary)", flexShrink: 0 }}>{p.views}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Top pages */}
+        <div style={{ padding: "22px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 16 }}>En Çok Ziyaret Edilen Sayfalar</div>
+          {data.topPages.length === 0 ? (
+            <p style={{ fontSize: 14, color: "var(--text-muted)", textAlign: "center", padding: "20px 0" }}>Henüz veri yok.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {data.topPages.map((pg, i) => {
+                const maxPg = data.topPages[0].views || 1;
+                const label = pg.path.replace(/^\/en/, "").replace(/^\//, "") || "anasayfa";
+                return (
+                  <div key={pg.path} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: "var(--text-muted)", width: 18, flexShrink: 0 }}>#{i + 1}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "var(--font-mono)" }}>{label}</div>
+                      <div style={{ marginTop: 4, height: 4, borderRadius: 9999, background: "var(--bg-tertiary)", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${(pg.views / maxPg) * 100}%`, borderRadius: 9999, background: "linear-gradient(90deg, #22d3ee, #a78bfa)" }} />
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "#22d3ee", flexShrink: 0 }}>{pg.views}</span>
                   </div>
                 );
               })}
@@ -440,10 +485,12 @@ function OverviewTab({
 
 // ── Posts Tab ──────────────────────────────────────────────────────
 function PostsTab({ role }: { role: Role }) {
-  const [posts, setPosts]     = useState<Post[]>([]);
-  const [filter, setFilter]   = useState<"all"|"published"|"draft">("all");
-  const [editing, setEditing] = useState<Post | "new" | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts]           = useState<Post[]>([]);
+  const [viewCounts, setViewCounts] = useState<Record<string, number>>({});
+  const [catColors, setCatColors]   = useState<Record<string, string>>({});
+  const [filter, setFilter]         = useState<"all"|"published"|"draft">("all");
+  const [editing, setEditing]       = useState<Post | "new" | null>(null);
+  const [loading, setLoading]       = useState(true);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -454,6 +501,25 @@ function PostsTab({ role }: { role: Role }) {
   }, [filter]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
+
+  useEffect(() => {
+    fetch("/api/analytics/views-by-post")
+      .then((r) => r.ok ? r.json() : {})
+      .then((d: Record<string, number>) => setViewCounts(d))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((cats: { name: string; hex: string }[]) => {
+        if (!Array.isArray(cats)) return;
+        const map: Record<string, string> = {};
+        cats.forEach((c) => { map[c.name] = c.hex; });
+        setCatColors(map);
+      })
+      .catch(() => {});
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Bu yazıyı silmek istediğinden emin misin?")) return;
@@ -487,36 +553,182 @@ function PostsTab({ role }: { role: Role }) {
       ) : posts.length === 0 ? (
         <div style={{ textAlign: "center", padding: 60, color: "var(--text-muted)" }}>Henüz yazı yok.</div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {posts.map((p) => (
-            <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 16px", borderRadius: 12, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 9999, flexShrink: 0, background: p.status === "published" ? "rgba(34,211,238,0.15)" : "rgba(129,140,248,0.15)", color: p.status === "published" ? "#22d3ee" : "#818cf8" }}>
-                {p.status === "published" ? "Yayında" : "Taslak"}
-              </span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.title}</div>
-                <div style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 2 }}>{p.category} · {p.read_time ?? "—"}</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
+          {posts.map((p) => {
+            const views    = viewCounts[p.id] ?? 0;
+            const hex      = catColors[p.category] ?? CAT_COLORS[p.category]?.hex ?? "#818cf8";
+            const dateLabel = p.published_at
+              ? new Date(p.published_at).toLocaleDateString("tr-TR", { day: "numeric", month: "short", year: "numeric" })
+              : null;
+            return (
+              <div key={p.id} style={{ borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                <div style={{ height: 3, background: `linear-gradient(90deg, ${hex}, transparent)` }} />
+                <div style={{ padding: "14px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 9999, background: `${hex}20`, border: `1px solid ${hex}40`, color: hex, flexShrink: 0 }}>{p.category}</span>
+                    {views > 0 && (
+                      <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 11, fontWeight: 700, color: "var(--text-muted)", padding: "2px 7px", borderRadius: 9999, background: "var(--bg-tertiary)", border: "1px solid var(--border-subtle)", flexShrink: 0 }}>
+                        <Eye size={11} /> {views}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>
+                    {p.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+                    {dateLabel ?? "—"}{p.read_time ? ` · ${p.read_time}` : ""}
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderTop: "1px solid var(--border-subtle)", background: "var(--bg-secondary)" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 9999, background: p.status === "published" ? "rgba(34,211,238,0.12)" : "rgba(129,140,248,0.12)", color: p.status === "published" ? "#22d3ee" : "#818cf8" }}>
+                    {p.status === "published" ? "Yayında" : "Taslak"}
+                  </span>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    {p.status === "published" && (
+                      <Link href={`/blog/${p.slug}`} target="_blank" style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--glass-fill)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", textDecoration: "none" }}>
+                        <ExternalLink size={12} />
+                      </Link>
+                    )}
+                    {role === "admin" && (
+                      <button onClick={() => handleToggleStatus(p)} title={p.status === "published" ? "Taslağa al" : "Yayınla"} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--glass-fill)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
+                        {p.status === "published" ? <EyeOff size={13} /> : <Eye size={13} />}
+                      </button>
+                    )}
+                    <button onClick={() => setEditing(p)} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid var(--border-subtle)", background: "var(--glass-fill)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
+                      <Pencil size={13} />
+                    </button>
+                    {role === "admin" && (
+                      <button onClick={() => handleDelete(p.id)} style={{ width: 28, height: 28, borderRadius: 7, border: "1px solid rgba(239,68,68,0.25)", background: "rgba(239,68,68,0.07)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}>
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                {role === "admin" && (
-                  <button onClick={() => handleToggleStatus(p)} title={p.status === "published" ? "Taslağa al" : "Yayınla"} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "var(--glass-fill)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
-                    {p.status === "published" ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                )}
-                <button onClick={() => setEditing(p)} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "var(--glass-fill)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
-                  <Pencil size={15} />
+            );
+          })}
+        </div>
+      )}
+      {editing && <PostEditor post={editing === "new" ? undefined : editing} onClose={() => setEditing(null)} onSave={fetchPosts} />}
+    </div>
+  );
+}
+
+// ── Categories Tab ─────────────────────────────────────────────────
+type Category = { id: string; name: string; hex: string; tone: string };
+
+const PRESET_HEX = ["#818cf8","#22d3ee","#a78bfa","#fb923c","#f87171","#34d399","#fbbf24","#f472b6","#38bdf8","#c084fc","#4ade80","#ef4444"];
+
+function CategoriesTab() {
+  const [cats, setCats]     = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Category | "new" | null>(null);
+  const [form, setForm]     = useState({ name: "", hex: "#818cf8", tone: "indigo" });
+  const [saving, setSaving] = useState(false);
+
+  const fetchCats = useCallback(async () => {
+    setLoading(true);
+    const data = await fetch("/api/categories").then((r) => r.json()).catch(() => []);
+    setCats(Array.isArray(data) ? data : []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { fetchCats(); }, [fetchCats]);
+
+  const openNew = () => { setForm({ name: "", hex: "#818cf8", tone: "indigo" }); setEditing("new"); };
+  const openEdit = (cat: Category) => { setForm({ name: cat.name, hex: cat.hex, tone: cat.tone }); setEditing(cat); };
+
+  const handleSave = async () => {
+    if (!form.name.trim()) return;
+    setSaving(true);
+    const isNew = editing === "new";
+    await fetch(isNew ? "/api/categories" : `/api/categories/${(editing as Category).id}`, {
+      method: isNew ? "POST" : "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    setSaving(false); setEditing(null); fetchCats();
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Bu kategoriyi silmek istediğinden emin misin?")) return;
+    await fetch(`/api/categories/${id}`, { method: "DELETE" });
+    fetchCats();
+  };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>Kategoriler</h2>
+        <button onClick={openNew} style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 14px", borderRadius: 9999, fontSize: 13, fontWeight: 700, cursor: "pointer", background: "var(--accent-primary)", border: "none", color: "var(--bg-primary)" }}>
+          <Plus size={15} /> Yeni Kategori
+        </button>
+      </div>
+
+      {/* Form panel */}
+      {editing && (
+        <div style={{ padding: "20px 24px", borderRadius: 16, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", marginBottom: 24 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 18 }}>
+            {editing === "new" ? "Yeni Kategori" : "Kategoriyi Düzenle"}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginBottom: 18 }}>
+            <div>
+              <label style={labelStyle}>KATEGORİ ADI</label>
+              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Örn: Machine Learning" style={inputStyle} />
+            </div>
+            <div>
+              <label style={labelStyle}>HEX RENK</label>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="color" value={form.hex} onChange={(e) => setForm((f) => ({ ...f, hex: e.target.value }))}
+                  style={{ width: 40, height: 40, borderRadius: 8, border: "1px solid var(--border-subtle)", cursor: "pointer", padding: 2, background: "var(--bg-tertiary)", flexShrink: 0 }} />
+                <input value={form.hex} onChange={(e) => setForm((f) => ({ ...f, hex: e.target.value }))} placeholder="#818cf8"
+                  style={{ ...inputStyle, fontFamily: "var(--font-mono)", fontSize: 13 }} />
+                <div style={{ width: 40, height: 40, borderRadius: 9999, background: form.hex, border: "2px solid var(--border-subtle)", flexShrink: 0 }} />
+              </div>
+            </div>
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            <label style={labelStyle}>HAZIR RENKLER</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+              {PRESET_HEX.map((c) => (
+                <button key={c} onClick={() => setForm((f) => ({ ...f, hex: c }))}
+                  style={{ width: 28, height: 28, borderRadius: 9999, background: c, border: form.hex.toLowerCase() === c ? "2px solid white" : "2px solid transparent", cursor: "pointer", boxShadow: form.hex.toLowerCase() === c ? `0 0 10px ${c}` : "none", flexShrink: 0 }} />
+              ))}
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <button onClick={() => setEditing(null)} style={{ padding: "8px 16px", borderRadius: 10, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)", fontSize: 14, cursor: "pointer" }}>İptal</button>
+            <button onClick={handleSave} disabled={saving || !form.name.trim()} style={{ padding: "8px 20px", borderRadius: 10, background: "var(--accent-primary)", border: "none", color: "var(--bg-primary)", fontSize: 14, fontWeight: 700, cursor: "pointer", opacity: !form.name.trim() ? 0.6 : 1 }}>
+              {saving ? "Kaydediliyor..." : "Kaydet"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Yükleniyor...</div>
+      ) : cats.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 40, color: "var(--text-muted)" }}>Henüz kategori yok.</div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {cats.map((cat) => (
+            <div key={cat.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 14, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
+              <div style={{ width: 18, height: 18, borderRadius: 9999, background: cat.hex, flexShrink: 0, boxShadow: `0 0 10px ${cat.hex}70` }} />
+              <div style={{ width: 48, height: 4, borderRadius: 9999, background: `linear-gradient(90deg, ${cat.hex}, transparent)`, flexShrink: 0 }} />
+              <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: "var(--text-primary)" }}>{cat.name}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 9999, background: `${cat.hex}20`, border: `1px solid ${cat.hex}40`, color: cat.hex, fontFamily: "var(--font-mono)" }}>{cat.hex}</span>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button onClick={() => openEdit(cat)} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid var(--border-subtle)", background: "var(--glass-fill)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
+                  <Pencil size={14} />
                 </button>
-                {role === "admin" && (
-                  <button onClick={() => handleDelete(p.id)} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}>
-                    <Trash2 size={15} />
-                  </button>
-                )}
+                <button onClick={() => handleDelete(cat.id)} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", background: "rgba(239,68,68,0.08)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#f87171" }}>
+                  <Trash2 size={14} />
+                </button>
               </div>
             </div>
           ))}
         </div>
       )}
-      {editing && <PostEditor post={editing === "new" ? undefined : editing} onClose={() => setEditing(null)} onSave={fetchPosts} />}
     </div>
   );
 }
@@ -1017,6 +1229,7 @@ export default function AdminPage() {
         {tab === "team"        && profile?.role === "admin" && <TeamTab />}
         {tab === "projects"    && profile?.role === "admin" && <ProjectsTab />}
         {tab === "users"       && profile?.role === "admin" && <UsersTab />}
+        {tab === "categories"  && profile?.role === "admin" && <CategoriesTab />}
       </main>
     </div>
   );

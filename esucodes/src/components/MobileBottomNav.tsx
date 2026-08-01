@@ -1,21 +1,23 @@
 "use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { Home, FolderOpen, BookOpen, Users, UserPlus } from "lucide-react";
 
-const NAV = [
-  { href: "/",           Icon: Home,       label: "Ana" },
-  { href: "/projeler",   Icon: FolderOpen, label: "Projeler" },
-  { href: "/blog",       Icon: BookOpen,   label: "Blog" },
-  { href: "/murettebat", Icon: Users,      label: "Ekip" },
-  { href: "/katil",      Icon: UserPlus,   label: "Katıl" },
-];
-
 export function MobileBottomNav() {
+  const t        = useTranslations("mobile");
   const pathname = usePathname();
+
+  const items = [
+    { href: "/",           Icon: Home,       label: t("home") },
+    { href: "/projeler",   Icon: FolderOpen, label: t("projects") },
+    { href: "/blog",       Icon: BookOpen,   label: t("blog") },
+    { href: "/murettebat", Icon: Users,      label: t("team") },
+    { href: "/katil",      Icon: UserPlus,   label: t("join") },
+  ] as const;
+
   return (
     <nav className="mob-bottom-nav">
-      {NAV.map(({ href, Icon, label }) => {
+      {items.map(({ href, Icon, label }) => {
         const active = pathname === href;
         return (
           <Link key={href} href={href} className={`mob-nav-item${active ? " mob-active" : ""}`}>

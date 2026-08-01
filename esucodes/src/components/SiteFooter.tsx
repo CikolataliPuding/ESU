@@ -1,11 +1,23 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Code2, Link2, Share2 } from "lucide-react";
-import { NAV } from "@/lib/data";
 
 export function SiteFooter() {
+  const t    = useTranslations("footer");
+  const tnav = useTranslations("nav");
   const [mars, setMars] = useState(false);
+
+  const navItems = [
+    { id: "home",     label: tnav("home"),     href: "/" as const },
+    { id: "projects", label: tnav("projects"), href: "/projeler" as const },
+    { id: "blog",     label: tnav("blog"),     href: "/blog" as const },
+    { id: "team",     label: tnav("team"),     href: "/murettebat" as const },
+    { id: "about",    label: tnav("about"),    href: "/hakkimizda" as const },
+    { id: "join",     label: tnav("join"),     href: "/katil" as const },
+  ] as const;
+
   return (
     <footer style={{ borderTop: "1px solid var(--border-subtle)", background: "var(--bg-secondary)" }}>
       <div style={{ maxWidth: "var(--container-max)", margin: "0 auto", padding: "56px 24px 32px" }}>
@@ -15,7 +27,7 @@ export function SiteFooter() {
               <span className="esu-gradient-text" style={{ fontSize: 20, fontWeight: 800 }}>ESUCODES</span>
             </Link>
             <p style={{ color: "var(--text-secondary)", fontSize: 15, margin: "0 0 20px", lineHeight: 1.65, maxWidth: 280 }}>
-              Yazılım öğrencilerinin kurduğu açık bilgi ve proje platformu. Keşfet, öğren, paylaş.
+              {t("description")}
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               {[Code2, Link2, Share2].map((Icon, i) => (
@@ -25,9 +37,11 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h4 style={{ color: "var(--text-primary)", fontSize: 13, fontWeight: 700, margin: "0 0 16px", letterSpacing: "0.08em", textTransform: "uppercase" }}>Platform</h4>
+            <h4 style={{ color: "var(--text-primary)", fontSize: 13, fontWeight: 700, margin: "0 0 16px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {t("platform")}
+            </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
-              {NAV.map((n) => (
+              {navItems.map((n) => (
                 <li key={n.id}>
                   <Link href={n.href} style={{ color: "var(--text-secondary)", fontSize: 14, textDecoration: "none" }}>
                     {n.label}
@@ -38,17 +52,19 @@ export function SiteFooter() {
           </div>
 
           <div>
-            <h4 style={{ color: "var(--text-primary)", fontSize: 13, fontWeight: 700, margin: "0 0 16px", letterSpacing: "0.08em", textTransform: "uppercase" }}>İletişim</h4>
+            <h4 style={{ color: "var(--text-primary)", fontSize: 13, fontWeight: 700, margin: "0 0 16px", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              {t("contact")}
+            </h4>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
               <li><span style={{ color: "var(--text-secondary)", fontSize: 14 }}>contact@esucodes.com</span></li>
-              <li><Link href="/katil" style={{ color: "var(--text-secondary)", fontSize: 14, textDecoration: "none" }}>Ekibe Katıl</Link></li>
-              <li><Link href="#" style={{ color: "var(--text-secondary)", fontSize: 14, textDecoration: "none" }}>GitHub</Link></li>
+              <li><Link href="/katil" style={{ color: "var(--text-secondary)", fontSize: 14, textDecoration: "none" }}>{t("joinTeam")}</Link></li>
+              <li><a href="#" style={{ color: "var(--text-secondary)", fontSize: 14, textDecoration: "none" }}>{t("github")}</a></li>
             </ul>
           </div>
         </div>
 
         <div style={{ paddingTop: 24, borderTop: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>© 2025 ESUCODES · Explore Software Universe</p>
+          <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>{t("copyright")}</p>
           <p style={{ color: "var(--text-muted)", fontSize: 13, margin: 0 }}>
             Made on{" "}
             <span

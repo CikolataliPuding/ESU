@@ -1,12 +1,14 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Terminal, Eye, EyeOff, LogIn } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GradientHeading } from "@/components/GradientHeading";
 
 export default function LoginPage() {
+  const t = useTranslations("auth");
   const router = useRouter();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      setError("E-posta veya şifre hatalı.");
+      setError(t("loginError"));
       setLoading(false);
       return;
     }
@@ -48,10 +50,10 @@ export default function LoginPage() {
           <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 56, height: 56, borderRadius: 16, background: "rgba(129,140,248,0.15)", border: "1px solid rgba(129,140,248,0.3)", marginBottom: 20 }}>
             <Terminal size={26} color="var(--accent-primary)" />
           </div>
-          <GradientHeading as="h1" size="4xl" gradient="accent" align="center">Giriş Yap</GradientHeading>
+          <GradientHeading as="h1" size="4xl" gradient="accent" align="center">{t("signin")}</GradientHeading>
           <p style={{ color: "var(--text-muted)", marginTop: 8, fontSize: 15 }}>
-            Hesabın yok mu?{" "}
-            <Link href="/kayit" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>Kayıt ol</Link>
+            {t("noAccount")}{" "}
+            <Link href="/kayit" style={{ color: "var(--accent-primary)", textDecoration: "none", fontWeight: 600 }}>{t("signupLink")}</Link>
           </p>
         </div>
 
@@ -63,11 +65,11 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>E-posta</label>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{t("email")}</label>
             <input
               type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ornek@esucodes.com"
+              placeholder={t("emailPlaceholder")}
               style={inputStyle}
               onFocus={(e) => (e.target.style.borderColor = "var(--accent-primary)")}
               onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
@@ -75,7 +77,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>Şifre</label>
+            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{t("password")}</label>
             <div style={{ position: "relative" }}>
               <input
                 type={showPass ? "text" : "password"} required value={password}
@@ -95,7 +97,7 @@ export default function LoginPage() {
             type="submit" disabled={loading}
             style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "13px", borderRadius: 12, background: "var(--accent-primary)", color: "var(--bg-primary)", fontSize: 15, fontWeight: 700, border: "none", cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, marginTop: 4 }}
           >
-            <LogIn size={18} /> {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            <LogIn size={18} /> {loading ? t("loggingIn") : t("signinButton")}
           </button>
         </form>
       </div>

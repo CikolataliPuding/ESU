@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Globe, Bot, LayoutDashboard, Orbit, FolderOpen, Users, CalendarDays, Sparkles, Code2, ExternalLink, UserPlus, GitMerge } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GradientHeading } from "@/components/GradientHeading";
@@ -15,13 +16,6 @@ type Project = {
 
 const ICONS: Record<string, React.ElementType> = { Globe, Bot, LayoutDashboard, Orbit, FolderOpen };
 
-const STATUS_MAP: Record<string, { label: string; color: string }> = {
-  live:        { label: "Canlı",           color: "#22d3ee" },
-  development: { label: "Geliştiriliyor",  color: "#818cf8" },
-  archived:    { label: "Arşiv",           color: "#64748b" },
-  private:     { label: "Gizli",           color: "#f87171" },
-};
-
 function StarfieldMini() {
   const stars = Array.from({ length: 40 }, (_, i) => ({ id: i, x: (i * 43 + 7) % 100, y: (i * 67 + 11) % 100, r: i % 3 === 0 ? 1.5 : 1, op: 0.2 + (i % 5) * 0.08 }));
   return (
@@ -35,7 +29,14 @@ function StarfieldMini() {
 
 function ProjectCard({ project }: { project: Project }) {
   const [hover, setHover] = useState(false);
-  const status = STATUS_MAP[project.status] ?? { label: project.status, color: "#64748b" };
+  const t = useTranslations("projects");
+  const statusMap: Record<string, { label: string; color: string }> = {
+    live:        { label: t("live"),        color: "#22d3ee" },
+    development: { label: t("development"), color: "#818cf8" },
+    archived:    { label: t("archived"),    color: "#64748b" },
+    private:     { label: t("private"),     color: "#f87171" },
+  };
+  const status = statusMap[project.status] ?? { label: project.status, color: "#64748b" };
   const Icon   = ICONS[project.icon] ?? Globe;
 
   return (
@@ -56,19 +57,21 @@ function ProjectCard({ project }: { project: Project }) {
       {project.description && <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.65, margin: "0 0 20px", flexGrow: 1 }}>{project.description}</p>}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-        {project.tech.map((t) => <span key={t} style={{ fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 9999, fontFamily: "var(--font-mono)", background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)" }}>{t}</span>)}
+        {project.tech.map((tech) => <span key={tech} style={{ fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 9999, fontFamily: "var(--font-mono)", background: "var(--bg-secondary)", border: "1px solid var(--border-subtle)", color: "var(--text-secondary)" }}>{tech}</span>)}
       </div>
 
       <div style={{ display: "flex", gap: 12, paddingTop: 20, borderTop: "1px solid var(--border-subtle)" }}>
         {project.github_url && <a href={project.github_url} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: "var(--text-muted)", textDecoration: "none" }}><Code2 size={16} /> GitHub</a>}
-        {project.live_url   && <a href={project.live_url}   style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: project.accent_color, textDecoration: "none" }}><ExternalLink size={16} /> Canlı</a>}
-        {!project.github_url && !project.live_url && <span style={{ fontSize: 14, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>🔒 gizli</span>}
+        {project.live_url   && <a href={project.live_url}   style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, color: project.accent_color, textDecoration: "none" }}><ExternalLink size={16} /> {t("live")}</a>}
+        {!project.github_url && !project.live_url && <span style={{ fontSize: 14, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{t("privateLabel")}</span>}
       </div>
     </div>
   );
 }
 
 export default function ProjectsPage() {
+  const t = useTranslations("projects");
+  const tTeam = useTranslations("team");
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading]   = useState(true);
 
@@ -78,10 +81,10 @@ export default function ProjectsPage() {
   }, []);
 
   const stats = [
-    { value: projects.length + "+", label: "Proje",      icon: FolderOpen },
-    { value: "3",                    label: "Kurucu Üye", icon: Users },
-    { value: "2025",                 label: "Kuruluş",    icon: CalendarDays },
-    { value: "∞",                   label: "Merak",        icon: Sparkles },
+    { value: projects.length + "+", label: t("projectCount"),          icon: FolderOpen },
+    { value: "3",                    label: tTeam("foundingMember"),    icon: Users },
+    { value: "2025",                 label: t("founded"),               icon: CalendarDays },
+    { value: "∞",                   label: t("curiosity"),              icon: Sparkles },
   ];
 
   return (
@@ -89,8 +92,8 @@ export default function ProjectsPage() {
       <section style={{ position: "relative", padding: "100px 24px 64px", textAlign: "center", overflow: "hidden" }}>
         <StarfieldMini />
         <div style={{ position: "relative", zIndex: 10, maxWidth: 800, margin: "0 auto" }}>
-          <GradientHeading as="h1" size="7xl" gradient="galactic" align="center" glow>Projeler</GradientHeading>
-          <p style={{ fontSize: 20, color: "var(--text-secondary)", marginTop: 16, lineHeight: 1.65 }}>Yazılım evrenini şekillendirmek için yaptıklarımız. Küçük adımlar, büyük hedefler.</p>
+          <GradientHeading as="h1" size="7xl" gradient="galactic" align="center" glow>{t("title")}</GradientHeading>
+          <p style={{ fontSize: 20, color: "var(--text-secondary)", marginTop: 16, lineHeight: 1.65 }}>{t("subtitleText")}</p>
         </div>
       </section>
 
@@ -116,7 +119,7 @@ export default function ProjectsPage() {
         ) : projects.length === 0 ? (
           <div style={{ textAlign: "center", padding: 80, color: "var(--text-muted)" }}>
             <div style={{ fontSize: 36, marginBottom: 12 }}>🌌</div>
-            <p>Henüz proje eklenmemiş.</p>
+            <p>{t("empty")}</p>
           </div>
         ) : (
           <ScrollReveal>
@@ -129,11 +132,11 @@ export default function ProjectsPage() {
 
       <section style={{ maxWidth: "var(--container-max)", margin: "0 auto 80px", padding: "48px", borderRadius: 24, background: "linear-gradient(135deg, rgba(129,140,248,0.12) 0%, rgba(34,211,238,0.08) 100%)", border: "1px solid var(--border-subtle)", textAlign: "center" }}>
         <span style={{ color: "var(--accent-primary)", marginBottom: 16, display: "block" }}><GitMerge size={36} /></span>
-        <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 12px" }}>Birlikte inşa edelim</h2>
-        <p style={{ fontSize: 17, color: "var(--text-secondary)", margin: "0 0 28px", lineHeight: 1.65 }}>Projelerimize katkıda bulunmak ister misin? Ekibimize katılabilirsin.</p>
+        <h2 style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", margin: "0 0 12px" }}>{t("ctaTitle")}</h2>
+        <p style={{ fontSize: 17, color: "var(--text-secondary)", margin: "0 0 28px", lineHeight: 1.65 }}>{t("ctaText")}</p>
         <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
           <Link href="/katil" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 28px", borderRadius: 12, textDecoration: "none", background: "var(--accent-primary)", color: "var(--bg-primary)", fontSize: 15, fontWeight: 700 }}>
-            <UserPlus size={18} /> Ekibe Katıl
+            <UserPlus size={18} /> {t("joinTeam")}
           </Link>
           <a href="https://github.com" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 28px", borderRadius: 12, textDecoration: "none", background: "var(--glass-fill)", border: "1px solid var(--border-subtle)", color: "var(--text-primary)", fontSize: 15, fontWeight: 700 }}>
             <Code2 size={18} /> GitHub

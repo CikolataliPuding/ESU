@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { BookOpen, FolderOpen } from "lucide-react";
 import { HeroScene } from "@/components/HeroScene";
 
 export function HeroSection() {
+  const t    = useTranslations("hero");
   const full = "ESUCODES";
   const [typed, setTyped] = useState("");
 
@@ -54,7 +56,7 @@ export function HeroSection() {
             display: "inline-block",
           }} />
           <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-tertiary)", letterSpacing: "0.08em" }}>
-            KEŞFET · ÖĞREN · ÜRET
+            {t("badge")}
           </span>
         </div>
 
@@ -78,7 +80,7 @@ export function HeroSection() {
 
         {/* Slogan */}
         <div style={{ display: "flex", justifyContent: "center", gap: "clamp(16px, 4vw, 48px)", margin: "20px 0 0" }}>
-          {["Keşfet", "Öğren", "Üret"].map((word, i) => (
+          {(t.raw("words") as string[]).map((word, i) => (
             <span key={word} style={{
               fontSize: "clamp(15px, 2vw, 22px)", fontWeight: 800, letterSpacing: "0.04em",
               background: [
@@ -99,8 +101,8 @@ export function HeroSection() {
           fontSize: "clamp(15px, 2vw, 19px)", color: "var(--text-secondary)",
           margin: "28px auto 40px", lineHeight: 1.75, maxWidth: 560,
         }}>
-          Yazılım öğrencilerinin kurduğu açık bilgi ve proje platformu.<br />
-          <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>Blog, proje ve topluluk — hepsi burada.</span>
+          {t("description")}<br />
+          <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>{t("descriptionHighlight")}</span>
         </p>
 
         <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
@@ -112,7 +114,7 @@ export function HeroSection() {
           }}
             onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.88")}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}>
-            <BookOpen size={20} /> Bloglara Göz At
+            <BookOpen size={20} /> {t("exploreBlog")}
           </Link>
           <Link href="/projeler" style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -123,7 +125,7 @@ export function HeroSection() {
           }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--accent-primary)")}
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--border-subtle)")}>
-            <FolderOpen size={20} /> Projeleri Keşfet
+            <FolderOpen size={20} /> {t("exploreProjects")}
           </Link>
         </div>
 

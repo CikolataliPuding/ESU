@@ -15,9 +15,9 @@ export type DbPost = {
   profiles?: { full_name: string | null; username: string | null } | null;
 };
 
-export function PostCard({ post }: { post: DbPost }) {
+export function PostCard({ post, catColor }: { post: DbPost; catColor?: { hex: string; tone: string } }) {
   const [hover, setHover] = useState(false);
-  const cat    = CAT_COLORS[post.category] || CAT_COLORS["AI"];
+  const cat    = catColor ?? CAT_COLORS[post.category] ?? CAT_COLORS["AI"];
   const author = post.profiles?.full_name ?? post.profiles?.username ?? "ESUcodes";
   const init   = author[0];
   const date   = post.published_at
@@ -41,7 +41,7 @@ export function PostCard({ post }: { post: DbPost }) {
       <div style={{ height: 3, background: `linear-gradient(90deg, ${cat.hex}, transparent)`, flexShrink: 0 }} />
       <div style={{ padding: "22px 22px 20px", display: "flex", flexDirection: "column", flexGrow: 1 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <CategoryBadge cat={post.category} />
+          <CategoryBadge cat={post.category} color={catColor} />
           <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{post.read_time}</span>
         </div>
         <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--text-primary)", margin: "0 0 10px", lineHeight: 1.4 }}>{post.title}</h3>
@@ -58,8 +58,8 @@ export function PostCard({ post }: { post: DbPost }) {
   );
 }
 
-export function CategoryBadge({ cat }: { cat: string }) {
-  const c = CAT_COLORS[cat] || CAT_COLORS["AI"];
+export function CategoryBadge({ cat, color }: { cat: string; color?: { hex: string; tone: string } }) {
+  const c = color ?? CAT_COLORS[cat] ?? CAT_COLORS["AI"];
   return (
     <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 9999, background: c.hex + "20", border: `1px solid ${c.hex}40`, color: c.hex, letterSpacing: "0.04em" }}>{cat}</span>
   );

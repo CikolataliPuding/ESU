@@ -27,14 +27,6 @@ function GlowCard({ children, glowColor = "rgba(129,140,248,0.15)" }: { children
   );
 }
 
-const TIMELINE = [
-  { year: "2023 — BAŞLANGIÇ", icon: "Rocket", color: "#818cf8", title: "Bir Fikrin Doğuşu", text: "Üç yazılım öğrencisi bir araya geldi. Fikir basitti: öğrendiklerini paylaşmak, keşfettiklerini anlatmak. \"Neden kendi platformumuzu kurmayalım?\" sorusuyla her şey başladı." },
-  { year: "2023 — İLK ADIMLAR", icon: "Share2", color: "#22d3ee", title: "ESUcodes Kuruldu", text: "İlk blog yazıları yazıldı, ilk satırlar yayınlandı. Siber güvenlikten frontend'e, gömülü sistemlerden yapay zekaya — yazılım evreni bu küçük ekip için açılmaya başladı." },
-  { year: "2024 — DONANIM",    icon: "Users",  color: "#a78bfa", title: "PANKEK Projesi",   text: "Sadece kod yazmakla kalmadık. Arkadaşlarımızla birlikte bir otonom robot hayata geçirdik. Teoriden pratiğe, ekrandan devreye — C++, Arduino ve çok fazla hata ayıklama." },
-  { year: "2025 — YENİ NESIL", icon: "Eye",    color: "#34d399", title: "ESUcodes 2.0",     text: "Platform sıfırdan yeniden yazıldı. Next.js 14 App Router, yeni tasarım dili, yeni içerikler. Daha hızlı, daha güzel, daha ESUcodes." },
-  { year: "BUGÜN → ∞",         icon: "Compass",color: "#fb923c", title: "Galaksi Büyüyor",  text: "Kanban board geliştiriliyor, yeni üyeler aranıyor. Küçük bir ekipten büyük bir topluluğa giden yolda her adım sayılır. Sen de bu yolculuğun bir parçası olabilirsin." },
-];
-
 export default function AboutPage() {
   return (
     <div>
@@ -54,6 +46,11 @@ export default function AboutPage() {
       </section>
 
       <div style={{ maxWidth: "var(--container-max)", margin: "0 auto", padding: "0 24px 96px" }}>
+        {/* Story intro */}
+        <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, textAlign: "center", maxWidth: 680, margin: "0 auto 64px" }}>
+          Her şey tek bir soruyla başladı: &ldquo;Kendi web siten olduğunu hayal ettin mi hiç?&rdquo; Cevap kısaydı — &ldquo;olur.&rdquo; Üç yazılım öğrencisi, bildiklerini kendine saklamanın anlamsızlığında birleşti ve gerisi, merakın peşinden gitmekten ibaretti.
+        </p>
+
         {/* Mission + Vision */}
         <ScrollReveal>
           <div className="grid-2" style={{ gap: 24, marginBottom: 80 }}>
@@ -64,11 +61,11 @@ export default function AboutPage() {
                   <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>Misyonumuz</h2>
                 </div>
                 <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, margin: "0 0 20px" }}>
-                  Öğrendiğimiz ve keşfettiğimiz yazılım bilgilerini paylaşarak genç geliştiricilere{" "}
-                  <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>açık, samimi ve anlaşılır</span> içerikler sunmak.
+                  Öğrendiğimizi saklamak yerine,{" "}
+                  <span style={{ color: "var(--text-primary)", fontWeight: 600 }}>anlaşılır ve samimi</span> bir dille geri vermek. Bugün üç öğrenci olarak yazıyor, üretiyor ve bu platformu her gün biraz daha büyütüyoruz. Derdimiz parlamak değil; gerçekten öğrenen ve öğrendiğini aktaran bir yer olmak.
                 </p>
                 <blockquote style={{ fontSize: 16, fontStyle: "italic", color: "var(--text-primary)", borderLeft: "3px solid var(--accent-primary)", paddingLeft: 18, margin: 0, lineHeight: 1.7 }}>
-                  &ldquo;Bugün küçük bir ekip olarak çıktığımız bu yolda, üretmeye ve öğrendiklerimizi aktarmaya devam ederiz.&rdquo;
+                  &ldquo;Bilgi biriktirilmek için değil, yayılmak için vardır.&rdquo;
                 </blockquote>
               </div>
             </GlowCard>
@@ -80,45 +77,14 @@ export default function AboutPage() {
                   <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>Vizyonumuz</h2>
                 </div>
                 <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, margin: "0 0 16px" }}>
-                  Yazılım evreninin uçsuz bucaksız karanlığında{" "}
-                  <span style={{ color: "var(--accent-tertiary)", fontWeight: 700 }}>kendi galaksisini</span> oluşturan bir topluluk olmak.
+                  Kimi yapılar çevresini iter, kimileri çeker. Biz ikincisinden olmak istiyoruz — yazılım evreninde dağılmış ne varsa{" "}
+                  <span style={{ color: "var(--accent-tertiary)", fontWeight: 700 }}>yavaşça kendine toplayan, yaklaştıkça bırakmayan bir merkez</span>. Bilgi, er ya da geç yörüngemize girer; biz de onu içimize alır, kendimizin kılarız. Büyüdükçe çekim gücümüz artar.
                 </p>
                 <p style={{ fontSize: 17, color: "var(--text-secondary)", lineHeight: 1.75, margin: 0 }}>
-                  Her alandan yazılımcının kendi gezegenini oluşturduğu, fakat aynı merkezde birleştiği — açık, üretken, meraklı bir ekosistem.
+                  Bugün üçüz. Ama ufkumuzda daha kalabalık bir şey var: yazılım öğrencilerinin bir araya geldiği, projelerini yönettiği, yazdığını paylaştığı, birbirine değdiği ve belki yollarını çizdiği bir merkez. Henüz küçük bir çekirdeğiz — ama merkezler hep küçük başlar. Sen de bu çekim alanına kapılabilirsin.
                 </p>
               </div>
             </GlowCard>
-          </div>
-        </ScrollReveal>
-
-        {/* Timeline */}
-        <ScrollReveal delay={0.1}>
-          <div style={{ marginBottom: 80 }}>
-            <div style={{ textAlign: "center", marginBottom: 56 }}>
-              <h2 style={{ fontSize: 36, fontWeight: 900, color: "var(--text-primary)", margin: "0 0 12px" }}>Hikayemiz</h2>
-              <p style={{ color: "var(--text-secondary)", fontSize: 17 }}>Başlangıçtan bugüne, küçük adımlarla büyük bir yolculuk</p>
-            </div>
-            <div style={{ maxWidth: 680, margin: "0 auto", padding: "40px 40px", borderRadius: 24, background: "var(--glass-fill)", border: "1px solid var(--border-subtle)" }}>
-              {TIMELINE.map((entry, i) => {
-                const Icon = ICONS[entry.icon] || Rocket;
-                const isLast = i === TIMELINE.length - 1;
-                return (
-                  <div key={entry.year} style={{ display: "flex", gap: 24 }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 9999, background: `${entry.color}20`, border: `2px solid ${entry.color}60`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 0 16px ${entry.color}30` }}>
-                        <Icon size={20} color={entry.color} />
-                      </div>
-                      {!isLast && <div style={{ width: 2, flexGrow: 1, minHeight: 32, background: "linear-gradient(to bottom, var(--border-subtle), transparent)", margin: "8px 0" }} />}
-                    </div>
-                    <div style={{ paddingBottom: isLast ? 0 : 40, paddingTop: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", color: entry.color, fontFamily: "var(--font-mono)", display: "block", marginBottom: 6 }}>{entry.year}</span>
-                      <h3 style={{ fontSize: 19, fontWeight: 800, color: "var(--text-primary)", margin: "0 0 8px" }}>{entry.title}</h3>
-                      <p style={{ fontSize: 15, color: "var(--text-secondary)", lineHeight: 1.7, margin: 0 }}>{entry.text}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </ScrollReveal>
 

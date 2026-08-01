@@ -67,7 +67,7 @@ export default function LoginPage() {
             <input
               type="email" required value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ada@universe.com"
+              placeholder="ornek@esucodes.com"
               style={inputStyle}
               onFocus={(e) => (e.target.style.borderColor = "var(--accent-primary)")}
               onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}

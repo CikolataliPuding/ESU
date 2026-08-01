@@ -88,8 +88,8 @@ export default function RegisterPage() {
           )}
 
           {[
-            { label: "Ad Soyad", key: "full_name", type: "text", placeholder: "Ada Lovelace" },
-            { label: "E-posta",  key: "email",     type: "email", placeholder: "ada@universe.com" },
+            { label: "Ad Soyad", key: "full_name", type: "text", placeholder: "Umut Zaif" },
+            { label: "E-posta",  key: "email",     type: "email", placeholder: "ornek@esucodes.com" },
           ].map(({ label, key, type, placeholder }) => (
             <div key={key}>
               <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-secondary)", marginBottom: 8 }}>{label}</label>

@@ -115,7 +115,7 @@ export default function TeamPage() {
   const stats = [
     { value: members.length,     label: "Kurucu Üye",  icon: Users },
     { value: projectCount + "+", label: "Aktif Proje", icon: FolderOpen },
-    { value: "2023",             label: "Kuruluş",     icon: CalendarDays },
+    { value: "2025",             label: "Kuruluş",     icon: CalendarDays },
     { value: "∞",                label: "Merak",        icon: Sparkles },
   ];
 

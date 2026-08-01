@@ -8,6 +8,17 @@ import type { Role } from "@/lib/supabase/types";
 // bilinçli olarak yeniden yazıldı — bu, Next.js'in middleware/route-handler sınırından
 // kaynaklanan, kabul edilmiş tek istisna.
 export async function middleware(request: NextRequest) {
+  // Production'da HTTP → HTTPS zorunlu yönlendirme
+  // Vercel/proxy arkasında x-forwarded-proto header'ı orijinal protokolü söyler
+  if (
+    process.env.NODE_ENV === "production" &&
+    request.headers.get("x-forwarded-proto") === "http"
+  ) {
+    const url = request.nextUrl.clone();
+    url.protocol = "https:";
+    return NextResponse.redirect(url, { status: 301 });
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
